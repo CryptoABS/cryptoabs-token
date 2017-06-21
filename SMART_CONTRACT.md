@@ -1,6 +1,6 @@
-## 合約細節
+## Contract Design
 
-合約設計參考：https://medium.com/zeppelin-blog/onward-with-ethereum-smart-contract-security-97a827e47702
+Reference：https://medium.com/zeppelin-blog/onward-with-ethereum-smart-contract-security-97a827e47702
 
 - Fail as early and loudly as possible: 遇到 error 就直接 throw 不要讓合約繼續運行下去
 	- 節省 gas 開銷
