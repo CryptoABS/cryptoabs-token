@@ -1,0 +1,14 @@
+{
+	"name": "smart-contract",
+  "version": "0.0.1",
+  "description": "",
+  "license": "MIT",
+  "devDependencies": {
+    "ethereumjs-testrpc": "^3.0.2",
+    "truffle": "^3.2.4"
+  },
+  "dependencies": {
+    "truffle-hdwallet-provider": "0.0.3",
+    "zeppelin-solidity": "^1.0.7"
+  }
+}
