@@ -1,7 +1,9 @@
 var Bonds = artifacts.require("./Bonds.sol");
-var Payment = artifacts.require("./Payment.sol");
+var PullPayment = artifacts.require("./PullPayment.sol");
+var PushPayment = artifacts.require("./PushPayment.sol");
 
 module.exports = function(deployer) {
   deployer.deploy(Bonds)
-  deployer.deploy(Payment)
+  deployer.deploy(PullPayment)
+  deployer.deploy(PushPayment)
 };

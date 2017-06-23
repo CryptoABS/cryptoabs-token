@@ -19,15 +19,15 @@ import "./zeppelin/ownership/Ownable.sol";
  * @dev https://github.com/ethereum/EIPs/issues/20
  */
 contract Bonds is BasicToken, ERC20, Ownable {
-	event Interest(address indexed owner, uint value, uint total);
-	event Deposite(address indexed owner, uint value);
-	event Withdraw(address indexed owner, uint value);
-	
-	mapping (address => mapping (address => uint)) allowed;
-	mapping (address => uint) interests;
-	address[] participants;
+  event Interest(address indexed owner, uint value, uint total);
+  event Deposite(address indexed owner, uint value);
+  event Withdraw(address indexed owner, uint value);
+  
+  mapping (address => mapping (address => uint)) allowed;
+  mapping (address => uint) interests;
+  address[] participants;
 
-	string public name = "Bonds";
+  string public name = "Bonds";
   string public symbol = "BONDS";
   uint public decimals = 18;
   uint public constant MAXIMUM_TOKEN_SUPPLY = 1000;
@@ -50,13 +50,13 @@ contract Bonds is BasicToken, ERC20, Ownable {
   function transfer(address _to, uint _value) onlyPayloadSize(2 * 32) {
     balances[msg.sender] = balances[msg.sender].sub(_value);
     balances[_to] = balances[_to].add(_value);
-   	// 判斷是否存在？
-   	participants.push(_to);
+     // 判斷是否存在？
+    participants.push(_to);
     
     Transfer(msg.sender, _to, _value);
   }
 
-	/**
+  /**
    * @dev Transfer tokens from one address to another
    * @param _from address The address which you want to send tokens from
    * @param _to address The address which you want to transfer to
@@ -83,8 +83,8 @@ contract Bonds is BasicToken, ERC20, Ownable {
    * @param _value The amount of tokens to be spent.
    */
   function approve(address _spender, uint _value) {
-  	// 這邊需要透過時間的控制才可以允許提款
-  	// if (current_time < bonds_start + '12 mins') throw;
+    // 這邊需要透過時間的控制才可以允許提款
+    // if (current_time < bonds_start + '12 mins') throw;
 
 
     // To change the approve amount you first have to reduce the addresses`
@@ -108,13 +108,13 @@ contract Bonds is BasicToken, ERC20, Ownable {
     return allowed[_owner][_spender];
   }
 
-	/**
+  /**
    * @dev Gets the interest of the specified address.
    * @param _owner The address to query the interest of. 
    * @return An uint representing the amount owned by the passed address.
    */
   function interestOf(address _owner) constant returns (uint interest) {
-  	return interests[_owner];
+    return interests[_owner];
   }
 
   /**
@@ -123,19 +123,19 @@ contract Bonds is BasicToken, ERC20, Ownable {
    * @param _value The value
    */
   function transferInterest(address _owner, uint _value) onlyOwner {
-  	interests[_owner] = interests[_owner].add(_value);
-  	Interest(_owner, _value, interests[_owner]);
+    interests[_owner] = interests[_owner].add(_value);
+    Interest(_owner, _value, interests[_owner]);
   }
 
   function withdraw() payable onlyOwner {
-  	if (!owner.send(this.balance)) {
-  		throw;
-  	}
-  	Withdraw(msg.sender, this.balance);
+    if (!owner.send(this.balance)) {
+      throw;
+    }
+    Withdraw(msg.sender, this.balance);
   }
 
   function deposite() payable onlyOwner {
-  	Deposite(msg.sender, msg.value);
+    Deposite(msg.sender, msg.value);
   }
 
   function () payable {
@@ -150,18 +150,18 @@ contract Bonds is BasicToken, ERC20, Ownable {
     // 最低投注額要大於 1 ether
     uint amount = msg.value / 1 ether;
     if (amount < 1) {
-    	throw;
+      throw;
     }
     uint tokens = amount.mul(getTokenPrice());
     if (totalSupply.add(tokens) > getMaximumTokenSupply()) {
-    	throw;
+      throw;
     }
 
     totalSupply = totalSupply.add(tokens);
 
     balances[recipient] = balances[recipient].add(tokens);
     // 判斷是否存在？
-   	participants.push(recipient);
+    participants.push(recipient);
     
 
     if (!owner.send(msg.value)) {
@@ -180,11 +180,11 @@ contract Bonds is BasicToken, ERC20, Ownable {
    * @return The maximum token supply on this contract. 
    */
   function getMaximumTokenSupply() constant returns (uint result) {
-  	return MAXIMUM_TOKEN_SUPPLY;
+    return MAXIMUM_TOKEN_SUPPLY;
   }
 
   function getParticipantCount() returns (uint result) {
-  	return participants.length;
+    return participants.length;
   }
 
 }
