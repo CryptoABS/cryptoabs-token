@@ -4,9 +4,7 @@ import "./ERC20.sol";
 import "./BasicToken.sol";
 import "./Ownable.sol";
 
-contract CryptoABS is BasicToken, ERC20, Ownable {
-  mapping (address => mapping (address => uint256)) allowed;
-
+contract CryptoABS is BasicToken, Ownable {
   string public name = "CryptoABS";                     // 名稱
   string public symbol = "CABS";                        // token 代號
   uint256 public decimals = 18;                         
@@ -25,7 +23,7 @@ contract CryptoABS is BasicToken, ERC20, Ownable {
   uint256 public tokenMaturityPeriod;                   // token 到期日
 
   bool public paused;                                   // 暫停合約功能執行
-  bool public initialize;                               // 合約啟動
+  bool public initialized;                              // 合約啟動
   uint256 public finalizedBlock;                        // 合約終止的區塊編號
   uint256 public finalizedTime;                         // 合約終止的時間
   uint256 public finalizedCapital;                      // 合約到期的 ETH 金額
@@ -43,7 +41,7 @@ contract CryptoABS is BasicToken, ERC20, Ownable {
    * @dev Throws if contract paused.
    */
   modifier notPaused() {
-    require(!paused);
+    require(paused == false);
     _;
   }
 
@@ -58,8 +56,8 @@ contract CryptoABS is BasicToken, ERC20, Ownable {
   /**
    * @dev Throws if contract not initialized. 
    */
-  modifier initialized() {
-    require(initialize == true);
+  modifier isInitialized() {
+    require(initialized == true);
     _;
   }
 
@@ -134,13 +132,13 @@ contract CryptoABS is BasicToken, ERC20, Ownable {
     tokenMaturityPeriod = _tokenMaturityPeriod;
     minEthInvest = _minEthInvest;
     maxTokenSupply = _maxTokenSupply;
-    initialize = true;
+    initialized = true;
   }
 
   /**
    * @dev Finalize contract
    */
-  function finalize() public initialized {
+  function finalize() public isInitialized {
     require(getBlockNumber() >= startBlock);
     require(msg.sender == owner || getBlockNumber() > endBlock);
 
@@ -161,7 +159,7 @@ contract CryptoABS is BasicToken, ERC20, Ownable {
    * @dev payment function, transfer eth to token
    * @param _payee The payee address
    */
-  function proxyPayment(address _payee) public payable notPaused initialized isContractOpen returns (bool) {
+  function proxyPayment(address _payee) public payable notPaused isInitialized isContractOpen returns (bool) {
     require(msg.value > 0);
 
     uint256 amount = msg.value / 1 ether;
@@ -187,7 +185,7 @@ contract CryptoABS is BasicToken, ERC20, Ownable {
    * @param _to The address to transfer to.
    * @param _value The amount to be transferred.
    */
-  function transfer(address _to, uint256 _value) onlyPayloadSize(2 * 32) notLockout notPaused initialized isContractOpen {
+  function transfer(address _to, uint256 _value) onlyPayloadSize(2 * 32) notLockout notPaused isInitialized {
     balances[msg.sender] = balances[msg.sender].sub(_value);
     balances[_to] = balances[_to].add(_value);
     if (payees[_to].isExists != true) {
@@ -203,7 +201,7 @@ contract CryptoABS is BasicToken, ERC20, Ownable {
    * @param _payee The payee address
    * @param _interest The interest amount to payee
    */
-  function addInterest(address _payee, uint256 _interest) onlyOwner notPaused initialized isContractOpen {
+  function addInterest(address _payee, uint256 _interest) onlyOwner notPaused isInitialized {
     if (payees[_payee].isExists != true) {
       payees[_payee].interest += _interest;
     } 
@@ -213,7 +211,7 @@ contract CryptoABS is BasicToken, ERC20, Ownable {
    * @dev return interest by address
    * @param _address The payee address
    */
-  function interestOf(address _address) initialized isContractOpen returns (uint256 result)  {
+  function interestOf(address _address) isInitialized returns (uint256 result)  {
     return payees[_address].interest;
   }
 
@@ -221,7 +219,7 @@ contract CryptoABS is BasicToken, ERC20, Ownable {
    * @dev withdraw interest by payee
    * @param _interest Withdraw interest amount
    */
-  function doWithdrawInterest(uint256 _interest) payable isPayee notPaused initialized notLockout isContractOpen {
+  function doWithdrawInterest(uint256 _interest) payable isPayee notPaused isInitialized notLockout {
     uint256 interest = _interest * 1 wei;
     require(payees[msg.sender].isPayable == true && _interest <= payees[msg.sender].interest);
     require(msg.sender.send(interest));
@@ -231,7 +229,7 @@ contract CryptoABS is BasicToken, ERC20, Ownable {
   /**
    * @dev withdraw capital by payee
    */
-  function doWithdrawCapital() payable isPayee notPaused initialized overMaturity isContractOpen {
+  function doWithdrawCapital() payable isPayee notPaused isInitialized overMaturity {
     require(balances[msg.sender] > 0 && totalSupply > 0);
     uint256 capital = (balances[msg.sender] / totalSupply) * finalizedCapital;
     require(payees[msg.sender].isPayable == true);
