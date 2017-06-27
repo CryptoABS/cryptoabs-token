@@ -17,3 +17,8 @@ Reference：https://medium.com/zeppelin-blog/onward-with-ethereum-smart-contract
 - Write simple and modular code: 簡單易懂，並且模組化
 - Event start from Log: 透過Log開頭替每個Event取名
 - Don’t write all your code from scratch
+
+#### require vs throw
+
+- `require` for a single check for i.e. a malformed input.
+- `throw` when need to do something between the real check and the exception.
