@@ -1,4 +1,4 @@
-## CryptoABS
+## CryptoABS Token
 
 - [Whitepaper](whitepaper.pdf)
 
