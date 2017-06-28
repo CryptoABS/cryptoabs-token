@@ -206,6 +206,7 @@ contract CryptoABS is StandardToken, Ownable {
 
     // Check is not needed because sub(_allowance, _value) will already throw if this condition is not met
     // if (_value > _allowance) throw;
+    require(_allowance >= _value);
 
     balances[_to] = balances[_to].add(_value);
     balances[_from] = balances[_from].sub(_value);
@@ -253,8 +254,8 @@ contract CryptoABS is StandardToken, Ownable {
    */
   function doWithdrawCapital() payable isPayee notPaused isInitialized overMaturity {
     require(balances[msg.sender] > 0 && totalSupply > 0);
-    uint256 capital = (balances[msg.sender] / totalSupply) * finalizedCapital;
     require(payees[msg.sender].isPayable == true);
+    uint256 capital = (balances[msg.sender] / totalSupply) * finalizedCapital;
     require(msg.sender.send(capital));
   }
 
@@ -335,7 +336,7 @@ contract CryptoABS is StandardToken, Ownable {
   /**
    * @dev put all capital in this contract
    */
-  function capital() payable onlyOwner {
+  function capital() payable isInitialized onlyOwner {
     require(msg.value > 0);
     finalizedCapital = msg.value * 1 wei;
     Capital(msg.value);
@@ -345,7 +346,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @dev put interest in this contract
    * @param times Number of interest
    */
-  function interest(uint256 times) payable onlyOwner {
+  function interest(uint256 times) payable isInitialized onlyOwner {
     Interest(times, msg.value);
   }
 
