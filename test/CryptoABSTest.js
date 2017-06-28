@@ -16,6 +16,9 @@ contract("CryptoABS", function(accounts) {
 
   it("should initalize contract", function() {
     var cryptoABS;
+    var name = "CryptoABS";
+    var symbol = "CABS";
+    var decimals = 0;
     var contractAddress = "";
     var startBlock = web3.eth.blockNumber + 2;  // each transaction will add 1 block number
     var endBlock = 10000;
@@ -28,6 +31,9 @@ contract("CryptoABS", function(accounts) {
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
       return cryptoABS.initialize(
+        name,
+        symbol,
+        decimals,
         contractAddress,
         startBlock, 
         endBlock, 

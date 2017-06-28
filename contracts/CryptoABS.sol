@@ -4,8 +4,8 @@ import "./StandardToken.sol";
 import "./Ownable.sol";
 
 contract CryptoABS is StandardToken, Ownable {
-  string public name = "CryptoABS";                     // 名稱
-  string public symbol = "CABS";                        // token 代號
+  string public name;                                   // 名稱
+  string public symbol;                                 // token 代號
   uint256 public decimals = 0;                         
   address public contractAddress;                       // contract address
 
@@ -97,6 +97,8 @@ contract CryptoABS is StandardToken, Ownable {
 
   /**
    * @dev Initialize contract with inital parameters. 
+   * @param _name name of token
+   * @param _symbol symbol of token
    * @param _contractAddress contract deployed address
    * @param _startBlock start block number
    * @param _endBlock end block number
@@ -108,6 +110,9 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _maxTokenSupply maximum toke supply
    */
   function initialize(
+      string _name,
+      string _symbol,
+      uint256 _decimals,
       address _contractAddress,
       uint256 _startBlock,
       uint256 _endBlock,
@@ -117,6 +122,11 @@ contract CryptoABS is StandardToken, Ownable {
       uint256 _tokenMaturityPeriod,
       uint256 _minEthInvest,
       uint256 _maxTokenSupply) onlyOwner {
+    require(bytes(name).length == 0);
+    require(bytes(symbol).length == 0);
+    require(bytes(_name).length > 0);
+    require(bytes(_symbol).length > 0);
+    require(decimals == 0);
     require(contractAddress == 0x0);
     require(totalSupply == 0);
     require(decimals == 0);
@@ -127,6 +137,9 @@ contract CryptoABS is StandardToken, Ownable {
     require(tokenMaturityPeriod == 0);
     require(initalizedTime == 0);
     require(_maxTokenSupply >= totalSupply);
+    name = _name;
+    symbol = _symbol;
+    decimals = _decimals;
     contractAddress = _contractAddress;
     startBlock = _startBlock;
     endBlock = _endBlock;
