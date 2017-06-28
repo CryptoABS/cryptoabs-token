@@ -1,9 +1,9 @@
-var CryptoABS = artifacts.require("../contracts/cryptoabs/CryptoABS.sol");
+var CryptoABS = artifacts.require("../contracts/CryptoABS.sol");
 
 contract('CryptoABS', function(accounts) {
   it("should initalize contract", function() {
     var cryptoABS;
-    var startBlock = 100;
+    var startBlock = web3.eth.blockNumber + 1;
     var endBlock = 10000;
     var initializedTime = 86400;
     var financingPeriod = 86400;
@@ -25,7 +25,6 @@ contract('CryptoABS', function(accounts) {
     }).then(function() {
       return cryptoABS.initialized.call();
     }).then(function(initialized) {
-      console.log('##initialized: ', initialized);
       assert.equal(initialized, true, "200 wasn't in the first account");
     });
   });
@@ -37,9 +36,8 @@ contract('CryptoABS', function(accounts) {
       cryptoABS = instance;
       return cryptoABS.initialized.call();
     }).then(function(initialized) {
-      console.log('##initialized: ', initialized);
       web3.eth.sendTransaction({ from: accounts[2], to: cryptoABS.address, value: web3.toWei(ether, "ether"), gas: 200000 });
-      return cryptoABS.balanceOf.call();
+      return cryptoABS.balanceOf(accounts[2]);
     }).then(function(balance) {
       assert.equal(balance.valueOf(), 200, "200 wasn't in the first account");
     });
