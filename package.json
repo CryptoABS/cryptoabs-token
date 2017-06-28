@@ -1,9 +1,10 @@
 {
-	"name": "smart-contract",
+  "name": "smart-contract",
   "version": "0.0.1",
   "description": "",
   "license": "MIT",
   "devDependencies": {
+    "eslint": "^4.1.1",
     "ethereumjs-testrpc": "^3.0.2",
     "truffle": "^3.2.4"
   },

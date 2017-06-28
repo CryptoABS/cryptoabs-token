@@ -1,6 +1,6 @@
 var CryptoABS = artifacts.require("../contracts/CryptoABS.sol");
 
-contract('CryptoABS', function(accounts) {
+contract("CryptoABS", function(accounts) {
   it("should initalize contract", function() {
     var cryptoABS;
     var startBlock = web3.eth.blockNumber + 2;  // each transaction will add 1 block number
@@ -43,6 +43,7 @@ contract('CryptoABS', function(accounts) {
       payee_start_amount = web3.eth.getBalance(accounts[2]).toNumber();
       return cryptoABS.initialized.call();
     }).then(function(initialized) {
+      assert.equal(initialized, true, "contract wasn't initalize");
       web3.eth.sendTransaction({ from: accounts[2], to: cryptoABS.address, value: web3.toWei(ether, "ether"), gas: 200000 });
       return cryptoABS.balanceOf(accounts[2]);
     }).then(function(balance) {
