@@ -232,7 +232,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _payee The payee address
    * @param _interest The interest amount to payee, unit `wei`
    */
-  function depositeInterest(address _payee, uint256 _interest) onlyOwner notPaused isInitialized {
+  function depositInterest(address _payee, uint256 _interest) onlyOwner notPaused isInitialized {
     require(payees[_payee].isExists == true);
     payees[_payee].interest += _interest;
   }
