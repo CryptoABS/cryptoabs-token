@@ -56,4 +56,33 @@ contract("CryptoABS", function(accounts) {
     });
   });
 
+  it("should get payee count", function() {
+    var cryptoABS;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.getPayeeCount.call();
+    }).then(function(count){
+      assert.equal(count, 1, "payee count wasn't correctly");
+    });
+  });
+
+  it("should return payee payable", function() {
+    var cryptoABS;
+    var correctPayee;
+    var incorrectPayee;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.isPayeePayable({from: accounts[2]});
+    }).then(function(bool) {
+      correctPayee = bool;
+      return cryptoABS.isPayeePayable({from: accounts[3]});
+    }).then(function(bool) {
+      incorrectPayee = bool;
+      assert.equal(correctPayee, true, "payee payable wasn't correctly");
+      assert.equal(incorrectPayee, false, "payee payable wasn't correctly");
+    });
+  });
+  
 });
