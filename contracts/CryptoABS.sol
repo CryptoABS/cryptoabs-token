@@ -1,10 +1,9 @@
 pragma solidity ^0.4.11;
 
-import "./ERC20.sol";
-import "./BasicToken.sol";
+import "./StandardToken.sol";
 import "./Ownable.sol";
 
-contract CryptoABS is BasicToken, Ownable {
+contract CryptoABS is StandardToken, Ownable {
   string public name = "CryptoABS";                     // 名稱
   string public symbol = "CABS";                        // token 代號
   uint256 public decimals = 18;                         
@@ -194,6 +193,29 @@ contract CryptoABS is BasicToken, Ownable {
       payeeArray.push(_to);
     }
     Transfer(msg.sender, _to, _value);
+  }
+
+  /**
+   * @dev Transfer tokens from one address to another
+   * @param _from address The address which you want to send tokens from
+   * @param _to address The address which you want to transfer to
+   * @param _value uint the amout of tokens to be transfered
+   */
+  function transferFrom(address _from, address _to, uint _value) onlyPayloadSize(3 * 32) {
+    var _allowance = allowed[_from][msg.sender];
+
+    // Check is not needed because sub(_allowance, _value) will already throw if this condition is not met
+    // if (_value > _allowance) throw;
+
+    balances[_to] = balances[_to].add(_value);
+    balances[_from] = balances[_from].sub(_value);
+    allowed[_from][msg.sender] = _allowance.sub(_value);
+    if (payees[_to].isExists != true) {
+      payees[_to].isExists = true;
+      payees[_to].isPayable = true;
+      payeeArray.push(_to);
+    }
+    Transfer(_from, _to, _value);
   }
 
   /**
