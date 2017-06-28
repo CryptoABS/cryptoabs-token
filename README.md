@@ -2,25 +2,21 @@
 
 - [Whitepaper](whitepaper.pdf)
 
-### Technical definition
-----
+## Technical definition
 
 At the technical level CABS are a ERC20-compliant tokens.
 
-### Techincal Stack
-----
+## Techincal Stack
 
 Use `truffle` to create, compile, deploy and test smart contract.  
 Use `open zeppelin` for smart contract security.  
 Use `testrpc` for local testing.
 
-### Contract Design principle
-----
+## Contract Design principle
 
 Take a look on [SMART_CONTRACT.md](SMART_CONTRACT.md) and [OPEN_ZEPPELIN.md](OPEN_ZEPPELIN.md).
 
-### Contracts
-----
+## Contracts
 
 [CryptoABS.sol](./contracts/CryptoABS.sol): Main contract for the token, CryptoABS is only partially-ERC20-compliant as it does not implement the `approve(...)`, `allowance(...)` and `transferFrom(...)` functions, and the `Approval(...)` event.  
 [BasicToken.sol](./contracts/BasicToken.sol): ERC20Basic.sol interface implementation.  
