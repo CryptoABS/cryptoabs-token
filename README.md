@@ -1,6 +1,7 @@
 # CryptoABS Token
 
 - [Whitepaper](whitepaper.pdf)
+- [CryptoABS Contract](./CRYPTO_ABS.md)
 
 ## Technical definition
 
@@ -28,3 +29,9 @@ Take a look on [SMART_CONTRACT.md](SMART_CONTRACT.md) and [OPEN_ZEPPELIN.md](OPE
   
 [PullPayment.sol](./contracts/payment/PullPayment.sol): Pull payment implementation.  
 [PushPayment.sol](./contracts/payment/PushPayment.sol): Push payment implementation.  
+
+## Reviewers and audits
+
+Code for the CryptoABS token is being reviewed by:
+
+Phyrex Tsai, Author.
