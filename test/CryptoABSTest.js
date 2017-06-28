@@ -3,7 +3,7 @@ var CryptoABS = artifacts.require("../contracts/CryptoABS.sol");
 contract('CryptoABS', function(accounts) {
   it("should initalize contract", function() {
     var cryptoABS;
-    var startBlock = web3.eth.blockNumber + 1;
+    var startBlock = web3.eth.blockNumber + 2;  // each transaction will add 1 block number
     var endBlock = 10000;
     var initializedTime = 86400;
     var financingPeriod = 86400;
@@ -32,13 +32,25 @@ contract('CryptoABS', function(accounts) {
   it("should buy CABS by send transaction", function() {
     var cryptoABS;
     var ether = 2;
+    var payee_start_amount;
+    var payee_end_amount;
+    var owner_start_amount;
+    var owner_end_amount;
+
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
+      owner_start_amount = web3.eth.getBalance(accounts[0]).toNumber();
+      payee_start_amount = web3.eth.getBalance(accounts[2]).toNumber();
       return cryptoABS.initialized.call();
     }).then(function(initialized) {
       web3.eth.sendTransaction({ from: accounts[2], to: cryptoABS.address, value: web3.toWei(ether, "ether"), gas: 200000 });
       return cryptoABS.balanceOf(accounts[2]);
     }).then(function(balance) {
+      owner_end_amount = web3.eth.getBalance(accounts[0]).toNumber();
+      payee_end_amount = web3.eth.getBalance(accounts[2]).toNumber();
+
+      assert.equal(web3.fromWei(owner_start_amount), web3.fromWei(owner_end_amount) - ether, "owner wasn't accept ether correctley");
+      assert.equal(web3.fromWei(payee_end_amount) < web3.fromWei(payee_start_amount), true, "owner wasn't send ether correctley");
       assert.equal(balance.valueOf(), 200, "200 wasn't in the first account");
     });
   });
