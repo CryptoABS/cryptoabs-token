@@ -22,12 +22,13 @@ Take a look on [SMART_CONTRACT.md](SMART_CONTRACT.md) and [OPEN_ZEPPELIN.md](OPE
 ### Contracts
 ----
 
-[CryptoABS.sol](./contracts/cryptoabs/CryptoABS.sol): Main contract for the token.  
-[BasicToken.sol](./contracts/cryptoabs/BasicToken.sol): ERC20Basic.sol interface implementation.  
-[ERC20.sol](./contracts/cryptoabs/ERC20.sol): ERC20 standrad interfaces.  
-[ERC20Basic.sol](./contracts/cryptoabs/ERC20Basic.sol): ERC20 standrad interfaces.  
-[Ownable.sol](./contracts/cryptoabs/Ownable.sol): Owner ship.  
-[SafeMath.sol](./contracts/cryptoabs/SafeMath.sol): Math operations with safety checks.  
+[CryptoABS.sol](./contracts/CryptoABS.sol): Main contract for the token, CryptoABS is only partially-ERC20-compliant as it does not implement the `approve(...)`, `allowance(...)` and `transferFrom(...)` functions, and the `Approval(...)` event.  
+[BasicToken.sol](./contracts/BasicToken.sol): ERC20Basic.sol interface implementation.  
+[StandardToken.sol](./contracts/StandardToken.sol): ERC20.sol interface implementation.
+[ERC20.sol](./contracts/ERC20.sol): ERC20 standard interfaces.
+[ERC20Basic.sol](./contracts/ERC20Basic.sol): ERC20 basic interfaces.  
+[Ownable.sol](./contracts/Ownable.sol): Owner ship.  
+[SafeMath.sol](./contracts/SafeMath.sol): Math operations with safety checks.  
   
-[PullPayment.sol](./contracts/cryptoabs/payment/PullPayment.sol): Pull payment implementation.  
-[PushPayment.sol](./contracts/cryptoabs/payment/PushPayment.sol): Push payment implementation.  
+[PullPayment.sol](./contracts/payment/PullPayment.sol): Pull payment implementation.  
+[PushPayment.sol](./contracts/payment/PushPayment.sol): Push payment implementation.  
