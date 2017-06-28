@@ -161,12 +161,6 @@ Enable or disable payee on emergency
 function getBlockNumber() internal constant returns (uint256);
 ```
 
-#### Token total supply
-
-```
-function getTotalSupply() constant returns (uint256);
-```
-
 #### Payee count
 
 ```

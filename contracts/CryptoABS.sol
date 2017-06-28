@@ -323,13 +323,6 @@ contract CryptoABS is StandardToken, Ownable {
   }
 
   /**
-   * @dev get total token supply
-   */
-  function getTotalSupply() constant returns (uint256) {
-    return totalSupply;
-  }
-
-  /**
    * @dev get payee count
    */
   function getPayeeCount() returns (uint256 result) {
