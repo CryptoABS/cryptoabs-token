@@ -32,6 +32,7 @@ This contract have to satisfy following reqires:
 - SafeMath.sol
 - Ownable.sol
 - BasicToken.sol
+- StandardToken.sol
 - ERC20.sol
 - ERC20Basic.sol
 
@@ -53,14 +54,16 @@ event Transfer(address indexed from, address indexed to, uint value);
 #### Initialize contract
 
 ```
-function initialize(uint256 _startBlock,
-      uint256 _endBlock,
-      uint256 _initializedTime,
-      uint256 _financingPeriod,
-      uint256 _tokenLockoutPeriod,
-      uint256 _tokenMaturityPeriod,
-      uint256 _minEthInvest,
-      uint256 _maxTokenSupply) onlyOwner;
+function initialize(
+  address _contractAddress,
+  uint256 _startBlock,
+  uint256 _endBlock,
+  uint256 _initializedTime,
+  uint256 _financingPeriod,
+  uint256 _tokenLockoutPeriod,
+  uint256 _tokenMaturityPeriod,
+  uint256 _minEthInvest,
+  uint256 _maxTokenSupply) onlyOwner;
 ```
 
 Only owner can initialize contract with several parameter
@@ -84,7 +87,7 @@ Make contract accept ETH
 #### Proxy payment
 
 ```
-function proxyPayment(address recipient) public payable notPaused initialized isContractOpen returns (bool);
+function proxyPayment(address recipient) public payable notPaused isInitialized isContractOpen returns (bool);
 ```
 
 Accept payment and create tokens to recipient
@@ -92,13 +95,13 @@ Accept payment and create tokens to recipient
 #### Override transfer
 
 ```
-function transfer(address _to, uint256 _value) onlyPayloadSize(2 * 32) notLockout notPaused initialized isContractOpen;
+function transfer(address _to, uint256 _value) onlyPayloadSize(2 * 32) notLockout notPaused isInitialized isContractOpen;
 ```
 
-#### add interest
+#### Deposit interest
 
 ```
-function addInterest(address _payee, uint256 _interest) onlyOwner notPaused initialized isContractOpen;
+function depositInterest(address _payee, uint256 _interest) onlyOwner notPaused isInitialized isContractOpen;
 ```
 
 Add interest to every payee
@@ -106,7 +109,7 @@ Add interest to every payee
 #### Get interest
 
 ```
-function interestOf(address _address) initialized isContractOpen returns (uint256 result);
+function interestOf(address _address) isInitialized isContractOpen returns (uint256 result);
 ```
 
 Get interest by address
@@ -114,7 +117,7 @@ Get interest by address
 #### Payee withdraw interest
 
 ```
-function doWithdrawInterest(uint256 _interest) payable isPayee notPaused initialized notLockout isContractOpen;
+function withdrawInterest(uint256 _interest) payable isPayee notPaused isInitialized notLockout isContractOpen;
 ```
 
 Let payee withdraw interest from this contract
@@ -122,7 +125,7 @@ Let payee withdraw interest from this contract
 #### Payee withdraw capital
 
 ```
-function doWithdrawCapital() payable isPayee notPaused initialized overMaturity isContractOpen;
+function withdrawCapital() payable isPayee notPaused isInitialized overMaturity isContractOpen;
 ```
 
 Let payee withdraw capital from this contract
@@ -195,3 +198,11 @@ function capital() payable onlyOwner;
 ```
 
 Only owner can put capital into this contract
+
+#### Withdraw from contract
+
+```
+function withdraw() onlyOwner;
+```
+
+Only owner can withdraw balance from contract
