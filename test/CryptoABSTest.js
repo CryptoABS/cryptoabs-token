@@ -140,7 +140,7 @@ contract("CryptoABS", function(accounts) {
 
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
-      return cryptoABS.addInterest(accounts[2], ether);
+      return cryptoABS.depositInterest(accounts[2], ether);
     }).then(function() {
       return cryptoABS.interestOf.call(accounts[2]);
     }).then(function(interest) {
