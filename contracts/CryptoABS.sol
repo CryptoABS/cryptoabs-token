@@ -232,7 +232,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _payee The payee address
    * @param _interest The interest amount to payee, unit `wei`
    */
-  function addInterest(address _payee, uint256 _interest) onlyOwner notPaused isInitialized {
+  function depositeInterest(address _payee, uint256 _interest) onlyOwner notPaused isInitialized {
     require(payees[_payee].isExists == true);
     payees[_payee].interest += _interest;
   }
@@ -250,7 +250,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @dev withdraw interest by payee
    * @param _interest Withdraw interest amount
    */
-  function doWithdrawInterest(uint256 _interest) payable isPayee notPaused isInitialized notLockout {
+  function withdrawInterest(uint256 _interest) payable isPayee notPaused isInitialized notLockout {
     require(msg.value == 0);
     uint256 interest = _interest * 1 wei;
     require(payees[msg.sender].isPayable == true && _interest <= payees[msg.sender].interest);
@@ -261,7 +261,7 @@ contract CryptoABS is StandardToken, Ownable {
   /**
    * @dev withdraw capital by payee
    */
-  function doWithdrawCapital() payable isPayee notPaused isInitialized overMaturity {
+  function withdrawCapital() payable isPayee notPaused isInitialized overMaturity {
     require(msg.value == 0);
     require(balances[msg.sender] > 0 && totalSupply > 0);
     require(payees[msg.sender].isPayable == true);
