@@ -6,7 +6,8 @@ import "./Ownable.sol";
 contract CryptoABS is StandardToken, Ownable {
   string public name = "CryptoABS";                     // 名稱
   string public symbol = "CABS";                        // token 代號
-  uint256 public decimals = 18;                         
+  uint256 public decimals = 0;                         
+  address public contractAddress;                       // contract address
 
   uint256 public constant tokenExchangeRate = 100;      // 1 USD = token
   uint256 public minEthInvest;                          // 最低投資金額
@@ -96,6 +97,7 @@ contract CryptoABS is StandardToken, Ownable {
 
   /**
    * @dev Initialize contract with inital parameters. 
+   * @param _contractAddress contract deployed address
    * @param _startBlock start block number
    * @param _endBlock end block number
    * @param _initializedTime contract initalized time
@@ -106,6 +108,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _maxTokenSupply maximum toke supply
    */
   function initialize(
+      address _contractAddress,
       uint256 _startBlock,
       uint256 _endBlock,
       uint256 _initializedTime,
@@ -114,8 +117,9 @@ contract CryptoABS is StandardToken, Ownable {
       uint256 _tokenMaturityPeriod,
       uint256 _minEthInvest,
       uint256 _maxTokenSupply) onlyOwner {
+    require(contractAddress == 0x0);
     require(totalSupply == 0);
-    require(decimals == 18);
+    require(decimals == 0);
     require(_startBlock >= getBlockNumber());
     require(_startBlock < _endBlock);
     require(financingPeriod == 0);
@@ -123,6 +127,7 @@ contract CryptoABS is StandardToken, Ownable {
     require(tokenMaturityPeriod == 0);
     require(initalizedTime == 0);
     require(_maxTokenSupply >= totalSupply);
+    contractAddress = _contractAddress;
     startBlock = _startBlock;
     endBlock = _endBlock;
     initalizedTime = _initializedTime;
@@ -185,6 +190,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _value The amount to be transferred.
    */
   function transfer(address _to, uint256 _value) onlyPayloadSize(2 * 32) notLockout notPaused isInitialized {
+    require(_to != contractAddress);
     balances[msg.sender] = balances[msg.sender].sub(_value);
     balances[_to] = balances[_to].add(_value);
     if (payees[_to].isExists != true) {
@@ -202,6 +208,8 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _value uint the amout of tokens to be transfered
    */
   function transferFrom(address _from, address _to, uint _value) onlyPayloadSize(3 * 32) {
+    require(_to != contractAddress);
+    require(_from != contractAddress);
     var _allowance = allowed[_from][msg.sender];
 
     // Check is not needed because sub(_allowance, _value) will already throw if this condition is not met
@@ -222,19 +230,19 @@ contract CryptoABS is StandardToken, Ownable {
   /**
    * @dev add interest to each payees
    * @param _payee The payee address
-   * @param _interest The interest amount to payee
+   * @param _interest The interest amount to payee, unit `wei`
    */
   function addInterest(address _payee, uint256 _interest) onlyOwner notPaused isInitialized {
-    if (payees[_payee].isExists != true) {
-      payees[_payee].interest += _interest;
-    } 
+    require(payees[_payee].isExists == true);
+    payees[_payee].interest += _interest;
   }
 
   /**
-   * @dev return interest by address
+   * @dev return interest by address, unit `wei`
    * @param _address The payee address
    */
   function interestOf(address _address) isInitialized returns (uint256 result)  {
+    require(payees[_address].isExists == true);
     return payees[_address].interest;
   }
 
@@ -243,6 +251,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _interest Withdraw interest amount
    */
   function doWithdrawInterest(uint256 _interest) payable isPayee notPaused isInitialized notLockout {
+    require(msg.value == 0);
     uint256 interest = _interest * 1 wei;
     require(payees[msg.sender].isPayable == true && _interest <= payees[msg.sender].interest);
     require(msg.sender.send(interest));
@@ -253,6 +262,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @dev withdraw capital by payee
    */
   function doWithdrawCapital() payable isPayee notPaused isInitialized overMaturity {
+    require(msg.value == 0);
     require(balances[msg.sender] > 0 && totalSupply > 0);
     require(payees[msg.sender].isPayable == true);
     uint256 capital = (balances[msg.sender] / totalSupply) * finalizedCapital;
@@ -348,6 +358,13 @@ contract CryptoABS is StandardToken, Ownable {
    */
   function interest(uint256 times) payable isInitialized onlyOwner {
     Interest(times, msg.value);
+  }
+
+  /**
+   * @dev withdraw balance from contract if emergency
+   */
+  function withdraw() payable isInitialized onlyOwner {
+    require(owner.send(this.balance));
   }
 
   event Capital(uint256 _capital);
