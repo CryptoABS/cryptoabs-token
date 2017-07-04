@@ -1,7 +1,24 @@
 var CryptoABS = artifacts.require("../contracts/CryptoABS.sol");
 
+/**
+ * Test cases should include following:
+ * 1. owner initialize
+ *     1.1 before owner initialize
+ * 2. payee buy token
+ *     2.1 less then ether limit
+ * 3. payee transfer token
+ * 4. owner deposit interest
+ * 5. payee check interest amount
+ * 6. payee withdraw interest
+ * 7. owner put interest
+ * 8. owner put capital
+ * 9. payee withdraw capital
+ */
 contract("CryptoABS", function(accounts) {
 
+  /**
+   * 1.1 before owner initialize: send transaction fail when not initialize
+   */
   it("should fail when contract not initialize", function() {
     var cryptoABS;
     var ether = 3;
@@ -14,6 +31,9 @@ contract("CryptoABS", function(accounts) {
     });
   });
 
+  /**
+   * 1. owner initailize
+   */
   it("should initalize contract", function() {
     var cryptoABS;
     var name = "CryptoABS";
@@ -50,6 +70,9 @@ contract("CryptoABS", function(accounts) {
     });
   });
 
+  /**
+   * 2.1 less then ether limit: buy token fail 
+   */
   it("should fail when less minimum ether invest", function() {
     var cryptoABS;
     var ether = 0.1;
@@ -62,6 +85,9 @@ contract("CryptoABS", function(accounts) {
     });
   });
 
+  /**
+   * 2. payee buy token
+   */
   it("should buy CABS by send transaction", function() {
     var cryptoABS;
     var ether = 2;
@@ -83,11 +109,14 @@ contract("CryptoABS", function(accounts) {
       owner_end_amount = web3.eth.getBalance(accounts[0]).toNumber();
       payee_end_amount = web3.eth.getBalance(accounts[2]).toNumber();
       assert.equal(web3.fromWei(owner_start_amount), web3.fromWei(owner_end_amount) - ether, "owner wasn't accept ether correctley");
-      assert.equal(web3.fromWei(payee_end_amount) < web3.fromWei(payee_start_amount), true, "payee wasn't send ether correctley");
+      assert.equal(payee_end_amount < payee_start_amount, true, "payee wasn't send ether correctley");
       assert.equal(balance.valueOf(), 200, "200 wasn't in the first account");
     });
   });
 
+  /**
+   * check payee count
+   */
   it("should get payee count", function() {
     var cryptoABS;
 
@@ -99,7 +128,10 @@ contract("CryptoABS", function(accounts) {
     });
   });
 
-  it("should return payee payable", function() {
+  /**
+   * check payee payable status
+   */
+  it("should return payee payable status", function() {
     var cryptoABS;
     var correctPayee;
     var incorrectPayee;
@@ -117,6 +149,9 @@ contract("CryptoABS", function(accounts) {
     });
   });
   
+  /**
+   * 3. payee token transfer
+   */
   it("should transfer CABS token", function() {
     var cryptoABS;
     var token = 50;
@@ -140,6 +175,9 @@ contract("CryptoABS", function(accounts) {
     });
   });
 
+  /**
+   * 4. owner deposit interest
+   */
   it("should add interest to payee", function() {
     var cryptoABS;
     var ether = 3;

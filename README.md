@@ -1,9 +1,23 @@
 # CryptoABS Token
 
-- [Whitepaper](whitepaper.pdf)
-- [CryptoABS Contract](./CRYPTO_ABS.md)
+- Website: http://cryptoabs.com/
+- Whitepaper: 
+- CryptoABS Contract: https://github.com/CryptoABS/cryptoabs-token/CRYPTO_ABS.md
 
-## Technical definition
+----
+
+# Table of contents
+
+- [Technical Definition](#technical-definition)
+- [Technical Stack](#technical-stack)
+- [Updates](#updates)
+- [Requirements](#requirements)
+- [TODO](#todo)
+- [Testing](#testing)
+- [Contracts](#contracts)
+- [Reviewers And Audits](#reviewers-and-audits)
+
+## Technical Definition
 
 At the technical level CABS are a ERC20-compliant tokens.
 
@@ -13,9 +27,28 @@ Use `truffle` to create, compile, deploy and test smart contract.
 Use `open zeppelin` for smart contract security.  
 Use `testrpc` for local testing.
 
+## Updates
+
+## Requirements
+
+- Token Identifier
+    - symbol `CABS`
+    - name `CryptoABS Token`
+    - decimals `0`
+- ETH/CABS Transfer rate
+
+## TODO
+
+- Multiple Signature Wallet
+- Decentralize Token Exchange
+
 ## Contract Design principle
 
 Take a look on [SMART_CONTRACT.md](SMART_CONTRACT.md) and [OPEN_ZEPPELIN.md](OPEN_ZEPPELIN.md).
+
+## Testing
+
+See [test](test) for details.
 
 ## Contracts
 
@@ -30,7 +63,7 @@ Take a look on [SMART_CONTRACT.md](SMART_CONTRACT.md) and [OPEN_ZEPPELIN.md](OPE
 [PullPayment.sol](./contracts/payment/PullPayment.sol): Pull payment implementation.  
 [PushPayment.sol](./contracts/payment/PushPayment.sol): Push payment implementation.  
 
-## Reviewers and audits
+## Reviewers And Audits
 
 Code for the CryptoABS token is being reviewed by:
 
