@@ -36,6 +36,30 @@ This contract have to satisfy following reqires:
 - ERC20.sol
 - ERC20Basic.sol
 
+### Structs
+
+#### Payee
+
+```javascript
+struct Payee {
+  bool isExists;                                      
+  bool isPayable;                                     
+  uint256 interest;
+}
+```
+
+Payee structure, store payee payable status and interest amount.
+
+#### Asset
+
+```javascript
+struct Asset {
+  string data;                                        
+}
+```
+
+Asset structure, store asset data/information.
+
 ### Methods
 
 #### ERC20 interface
@@ -66,7 +90,10 @@ function initialize(
   uint256 _tokenLockoutPeriod,
   uint256 _tokenMaturityPeriod,
   uint256 _minEthInvest,
-  uint256 _maxTokenSupply) onlyOwner;
+  uint256 _maxTokenSupply,
+  uint256 _interestRate,
+  uint256 _interestPeriod,
+  uint256 _ethExchangeRate) onlyOwner;
 ```
 
 Only owner can initialize contract with several parameter
@@ -102,6 +129,12 @@ function transfer(address _to, uint256 _value) onlyPayloadSize(2 * 32) notLockou
 ```
 
 ERC20 standard
+
+#### Override transferFrom
+
+```javascript
+function transferFrom(address _from, address _to, uint _value) onlyPayloadSize(3 * 32) notLockout notPaused isInitialized ;
+```
 
 #### Deposit interest
 
@@ -164,6 +197,26 @@ Enable or disable payee on emergency
 
 ```javascript
 function getBlockNumber() internal constant returns (uint256);
+```
+
+#### Add asset
+
+```javascript
+function addAsset(string _data) onlyOwner;
+```
+
+Add asset data for audit
+
+### Get asset data
+
+```javascript
+function getAssetData(uint256 num) returns (string result);
+```
+
+### Get asset count
+
+```javascript
+function getAssetCount() returns (uint256 result);
 ```
 
 #### Payee count

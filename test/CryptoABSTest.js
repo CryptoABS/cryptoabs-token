@@ -2,17 +2,20 @@ var CryptoABS = artifacts.require("../contracts/CryptoABS.sol");
 
 /**
  * Test cases should include following:
- * 1. owner initialize
- *     1.1 before owner initialize
- * 2. payee buy token
- *     2.1 less then ether limit
- * 3. payee transfer token
- * 4. owner deposit interest
- * 5. payee check interest amount
- * 6. payee withdraw interest
- * 7. owner put interest
- * 8. owner put capital
- * 9. payee withdraw capital
+ * 1.  owner initialize
+ *     1.1.  before owner initialize
+ * 2.  payee buy token
+ *     2.1.  less then ether limit
+ * 3.  payee transfer token
+ * 4.  owner deposit interest
+ * 5.  payee check interest amount
+ * 6.  payee withdraw interest
+ * 7.  owner put interest
+ * 8.  owner put capital
+ * 9.  payee withdraw capital
+ * 10. owner add asset
+ *     10.1.  get asset data
+ *     10.2.  get asset count
  */
 contract("CryptoABS", function(accounts) {
 
@@ -48,6 +51,9 @@ contract("CryptoABS", function(accounts) {
     var tokenMaturityPeriod = 86400 * 2;        // 債券到期日
     var minEthInvest = 1;                       // 購買 Token 最小單位
     var maxTokenSupply = 10000;
+    var interestRate = 8;
+    var interestPeriod = 86400 * 30;
+    var ethExchangeRate = 300;                  // 1 ETH = 300 CryptoABS token = 300 USD
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
       return cryptoABS.initialize(
@@ -62,7 +68,10 @@ contract("CryptoABS", function(accounts) {
         tokenLockoutPeriod,
         tokenMaturityPeriod,
         minEthInvest,
-        maxTokenSupply);
+        maxTokenSupply,
+        interestRate,
+        interestPeriod,
+        ethExchangeRate);
     }).then(function() {
       return cryptoABS.initialized.call();
     }).then(function(initialized) {
@@ -110,7 +119,7 @@ contract("CryptoABS", function(accounts) {
       payee_end_amount = web3.eth.getBalance(accounts[2]).toNumber();
       assert.equal(web3.fromWei(owner_start_amount), web3.fromWei(owner_end_amount) - ether, "owner wasn't accept ether correctley");
       assert.equal(payee_end_amount < payee_start_amount, true, "payee wasn't send ether correctley");
-      assert.equal(balance.valueOf(), 200, "200 wasn't in the first account");
+      assert.equal(balance.valueOf(), 600, "200 wasn't in the first account");
     });
   });
 
@@ -189,6 +198,29 @@ contract("CryptoABS", function(accounts) {
       return cryptoABS.interestOf.call(accounts[2]);
     }).then(function(interest) {
       assert.equal(interest.toNumber(), ether, "add interest wasn't correctly");
+    });
+  });
+
+  /**
+   * 10. add asset
+   * 10.1. get asset data
+   * 10.2. get asset count
+   */
+  it("should add asset", function() {
+    var cryptoABS;
+    var data = "test";
+    var num = 0;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.addAsset(data);
+    }).then(function() {
+      return cryptoABS.getAssetData.call(num);
+    }).then(function(result) {
+      assert.equal(result, data, "get asset data wasn't correctly");
+      return cryptoABS.getAssetCount.call();
+    }).then(function(count){
+      assert.equal(count.toNumber(), 1, "add asset wasn't correctly");
     });
   });
 

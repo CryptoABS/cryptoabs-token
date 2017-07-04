@@ -9,9 +9,8 @@ contract CryptoABS is StandardToken, Ownable {
   uint256 public decimals = 0;                         
   address public contractAddress;                       // contract address
 
-  uint256 public constant tokenExchangeRate = 100;      // 1 USD = token
   uint256 public minEthInvest;                          // 最低投資金額
-  uint256 public ethExchangeRate;                       // 1 USD = wei
+  uint256 public ethExchangeRate;                       // 1 ETH = 
 
   uint256 public startBlock;                            // ICO 起始的 block number
   uint256 public endBlock;                              // ICO 結束的 block number
@@ -27,6 +26,9 @@ contract CryptoABS is StandardToken, Ownable {
   uint256 public finalizedBlock;                        // 合約終止的區塊編號
   uint256 public finalizedTime;                         // 合約終止的時間
   uint256 public finalizedCapital;                      // 合約到期的 ETH 金額
+  uint256 public interestRate;                          // 利率，公開資訊提供查詢，initialized 後不再更動
+  uint256 public interestTimes;                         // 派息次數，公開資訊提供查詢，initialized 後不再更動
+  uint256 public interestPeriod;                        // 派息間距，公開資訊提供查詢，initialized 後不再更動
 
   struct Payee {
     bool isExists;                                      // payee 存在
@@ -36,6 +38,12 @@ contract CryptoABS is StandardToken, Ownable {
 
   mapping (address => Payee) public payees; 
   address[] payeeArray;
+
+  struct Asset {
+    string data;                                        // asset data
+  }
+
+  Asset[] public assets;                                // assets array
 
   /**
    * @dev Throws if contract paused.
@@ -108,6 +116,8 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _tokenMaturityPeriod contract token maturity period
    * @param _minEthInvest minimum ether accept of invest
    * @param _maxTokenSupply maximum toke supply
+   * @param _interestRate interest rate
+   * @param _interestPeriod interest period
    */
   function initialize(
       string _name,
@@ -121,7 +131,10 @@ contract CryptoABS is StandardToken, Ownable {
       uint256 _tokenLockoutPeriod,
       uint256 _tokenMaturityPeriod,
       uint256 _minEthInvest,
-      uint256 _maxTokenSupply) onlyOwner {
+      uint256 _maxTokenSupply,
+      uint256 _interestRate,
+      uint256 _interestPeriod,
+      uint256 _ethExchangeRate) onlyOwner {
     require(bytes(name).length == 0);
     require(bytes(symbol).length == 0);
     require(bytes(_name).length > 0);
@@ -137,6 +150,8 @@ contract CryptoABS is StandardToken, Ownable {
     require(tokenMaturityPeriod == 0);
     require(initalizedTime == 0);
     require(_maxTokenSupply >= totalSupply);
+    require(interestRate == 0);
+    require(interestPeriod == 0);
     name = _name;
     symbol = _symbol;
     decimals = _decimals;
@@ -149,6 +164,9 @@ contract CryptoABS is StandardToken, Ownable {
     tokenMaturityPeriod = _tokenMaturityPeriod;
     minEthInvest = _minEthInvest;
     maxTokenSupply = _maxTokenSupply;
+    interestRate = _interestRate;
+    interestPeriod = _interestPeriod;
+    ethExchangeRate = _ethExchangeRate;
     initialized = true;
   }
 
@@ -182,7 +200,7 @@ contract CryptoABS is StandardToken, Ownable {
     uint256 amount = msg.value / 1 ether;
     require(amount >= minEthInvest); // TODO: 改成變數
 
-    uint256 tokens = amount.mul(tokenExchangeRate);
+    uint256 tokens = amount.mul(ethExchangeRate);
     require(totalSupply.add(tokens) <= maxTokenSupply);
 
     balances[_payee] = balances[_payee].add(tokens);
@@ -220,7 +238,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _to address The address which you want to transfer to
    * @param _value uint the amout of tokens to be transfered
    */
-  function transferFrom(address _from, address _to, uint _value) onlyPayloadSize(3 * 32) {
+  function transferFrom(address _from, address _to, uint _value) onlyPayloadSize(3 * 32) notLockout notPaused isInitialized {
     require(_to != contractAddress);
     require(_from != contractAddress);
     var _allowance = allowed[_from][msg.sender];
@@ -333,6 +351,26 @@ contract CryptoABS is StandardToken, Ownable {
    */
   function getBlockNumber() internal constant returns (uint256) {
     return block.number;
+  }
+
+  /**
+   * @dev add asset data, audit information
+   */
+  function addAsset(string _data) onlyOwner {
+    var _asset = Asset({data: _data});
+    assets.push(_asset);
+  }
+
+  /**
+   * @dev get assets count
+   */
+  function getAssetCount() returns (uint256 result) {
+    return assets.length;
+  }
+
+  function getAssetData(uint256 num) returns (string data) {
+    require(num < assets.length);
+    return assets[num].data;
   }
 
   /**

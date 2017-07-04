@@ -31,12 +31,12 @@ truffle test
 
 ## Test cases
 
-- [v] owner initialize
-    - [v] before owner initialize
-- [v] payee buy token
-    - [v] less then ether limit
-- [v] payee transfer token
-- [v] owner deposit interest
+- [x] owner initialize
+    - [x] before owner initialize
+- [x] payee buy token
+    - [x] less then ether limit
+- [x] payee transfer token
+- [x] owner deposit interest
 - [ ] payee check interest amount
 - [ ] payee withdraw interest
 - [ ] owner put interest

@@ -1,7 +1,7 @@
 # CryptoABS Token
 
 - Website: http://cryptoabs.com/
-- Whitepaper: 
+- Whitepaper: https://github.com/cryptoabs/cryptoabs
 - CryptoABS Contract: https://github.com/CryptoABS/cryptoabs-token/CRYPTO_ABS.md
 
 ----
@@ -19,7 +19,8 @@
 
 ## Technical Definition
 
-At the technical level CABS are a ERC20-compliant tokens.
+CryptoABS is an ABS contract template.
+At the technical level CABS are a ERC20-compliant tokens.  
 
 ## Techincal Stack
 
@@ -39,8 +40,8 @@ Use `testrpc` for local testing.
 
 ## TODO
 
-- Multiple Signature Wallet
-- Decentralize Token Exchange
+- Migrate CryptoABS.sol with Multiple Signature Wallet
+- Create Decentralize Token Exchange for CryptoABS.sol
 
 ## Contract Design principle
 
