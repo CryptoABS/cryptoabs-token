@@ -136,27 +136,6 @@ contract("CryptoABS", function(accounts) {
       assert.equal(count, 1, "payee count wasn't correctly");
     });
   });
-
-  /**
-   * check payee payable status
-   */
-  it("should return payee payable status", function() {
-    var cryptoABS;
-    var correctPayee;
-    var incorrectPayee;
-
-    return CryptoABS.deployed().then(function(instance) {
-      cryptoABS = instance;
-      return cryptoABS.isPayeePayable({from: accounts[2]});
-    }).then(function(bool) {
-      correctPayee = bool;
-      return cryptoABS.isPayeePayable({from: accounts[3]});
-    }).then(function(bool) {
-      incorrectPayee = bool;
-      assert.equal(correctPayee, true, "payee payable wasn't correctly");
-      assert.equal(incorrectPayee, false, "payee payable wasn't correctly");
-    });
-  });
   
   /**
    * 3. payee token transfer
@@ -215,7 +194,7 @@ contract("CryptoABS", function(accounts) {
       cryptoABS = instance;
       return cryptoABS.addAsset(data);
     }).then(function() {
-      return cryptoABS.getAssetData.call(num);
+      return cryptoABS.assetArray.call(num);
     }).then(function(result) {
       assert.equal(result, data, "get asset data wasn't correctly");
       return cryptoABS.getAssetCount.call();

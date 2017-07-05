@@ -42,3 +42,7 @@ truffle test
 - [ ] owner put interest
 - [ ] owner put capital
 - [ ] payee withdraw capital
+- [ ] ownership switch
+- [ ] add asset
+    - [ ] get asset count
+    - [ ] get asset data 
