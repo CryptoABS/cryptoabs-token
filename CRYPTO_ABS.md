@@ -147,7 +147,7 @@ Add interest to every payee
 #### Get interest
 
 ```javascript
-function interestOf(address _address) isInitialized isContractOpen returns (uint256 result);
+function interestOf(address _address) isInitialized constant returns (uint256 result);
 ```
 
 Get interest by address
@@ -181,7 +181,6 @@ Only owner can pause/resume contract by emergency
 
 ```javascript
 function setEthExchangeRate(uint256 _ethExchangeRate) onlyOwner;
-function getEthExchangeRate() returns (uint256 result);
 ```
 
 #### Disable/Enable payee
@@ -207,33 +206,19 @@ function addAsset(string _data) onlyOwner;
 
 Add asset data for audit
 
-### Get asset data
-
-```javascript
-function getAssetData(uint256 num) returns (string result);
-```
-
 ### Get asset count
 
 ```javascript
-function getAssetCount() returns (uint256 result);
+function getAssetCount() constant returns (uint256 result);
 ```
 
 #### Payee count
 
 ```javascript
-function getPayeeCount() returns (uint256 result);
+function getPayeeCount() constant returns (uint256 result);
 ```
 
 Return payee count
-
-#### Payee payable status
-
-```javascript
-function isPayeePayable() constant returns (bool result);
-```
-
-Return payee payable status
 
 #### Put interest
 
