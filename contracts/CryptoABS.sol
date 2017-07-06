@@ -6,11 +6,10 @@ import "./Ownable.sol";
 contract CryptoABS is StandardToken, Ownable {
   string public name;                                   // 名稱
   string public symbol;                                 // token 代號
-  uint256 public decimals = 0;                         
+  uint256 public decimals = 0;                          // decimals
   address public contractAddress;                       // contract address
 
-  uint256 public minEthInvest;                          // 最低投資金額
-  uint256 public ethExchangeRate;                       // 1 ETH = n token
+  uint256 public minInvestInWei;                        // 最低投資金額 in wei
 
   uint256 public startBlock;                            // ICO 起始的 block number
   uint256 public endBlock;                              // ICO 結束的 block number
@@ -30,6 +29,16 @@ contract CryptoABS is StandardToken, Ownable {
   uint256 public interestTimes;                         // 派息次數，公開資訊提供查詢，initialized 後不再更動
   uint256 public interestPeriod;                        // 派息間距，公開資訊提供查詢，initialized 後不再更動
 
+  struct ExchangeRate {
+    uint256 blockNumber;                                // block number
+    uint256 exchangeRateInWei;                          // 1 Token = n ETH in wei
+  }
+
+  ExchangeRate[] public exchangeRateArray;              // exchange rate array
+  uint256 public nextExchangeRateIndex;                     // exchange rate last index
+  
+  uint256[] public interestArray;                       // interest array
+
   struct Payee {
     bool isExists;                                      // payee 存在
     bool isPayable;                                     // payee 允許領錢
@@ -38,6 +47,7 @@ contract CryptoABS is StandardToken, Ownable {
 
   mapping (address => Payee) public payees; 
   address[] public payeeArray;                          // payee array
+  uint256 public nextPayeeIndex;                        // payee deposite interest index
 
   struct Asset {
     string data;                                        // asset data
@@ -50,6 +60,14 @@ contract CryptoABS is StandardToken, Ownable {
    */
   modifier notPaused() {
     require(paused == false);
+    _;
+  }
+
+  /**
+   * @dev Throws if contract is paused.
+   */
+  modifier isPaused() {
+    require(paused == true);
     _;
   }
 
@@ -114,11 +132,11 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _financingPeriod contract financing period
    * @param _tokenLockoutPeriod contract token lockout period
    * @param _tokenMaturityPeriod contract token maturity period
-   * @param _minEthInvest minimum ether accept of invest
+   * @param _minInvestInWei minimum wei accept of invest
    * @param _maxTokenSupply maximum toke supply
    * @param _interestRate interest rate
    * @param _interestPeriod interest period
-   * @param _ethExchangeRate ether exchange rate
+   * @param _ethExchangeRateInWei ether exchange rate in wei
    */
   function initialize(
       string _name,
@@ -131,11 +149,11 @@ contract CryptoABS is StandardToken, Ownable {
       uint256 _financingPeriod,
       uint256 _tokenLockoutPeriod,
       uint256 _tokenMaturityPeriod,
-      uint256 _minEthInvest,
+      uint256 _minInvestInWei,
       uint256 _maxTokenSupply,
       uint256 _interestRate,
       uint256 _interestPeriod,
-      uint256 _ethExchangeRate) onlyOwner {
+      uint256 _ethExchangeRateInWei) onlyOwner {
     require(bytes(name).length == 0);
     require(bytes(symbol).length == 0);
     require(bytes(_name).length > 0);
@@ -163,11 +181,11 @@ contract CryptoABS is StandardToken, Ownable {
     financingPeriod = _financingPeriod;
     tokenLockoutPeriod = _tokenLockoutPeriod;
     tokenMaturityPeriod = _tokenMaturityPeriod;
-    minEthInvest = _minEthInvest;
+    minInvestInWei = _minInvestInWei;
     maxTokenSupply = _maxTokenSupply;
     interestRate = _interestRate;
     interestPeriod = _interestPeriod;
-    ethExchangeRate = _ethExchangeRate;
+    ownerSetExchangeRateInWei(_ethExchangeRateInWei);
     initialized = true;
   }
 
@@ -198,12 +216,15 @@ contract CryptoABS is StandardToken, Ownable {
   function proxyPayment(address _payee) public payable notPaused isInitialized isContractOpen returns (bool) {
     require(msg.value > 0);
 
-    uint256 amount = msg.value / 1 ether;
-    require(amount >= minEthInvest);
+    uint256 amount = msg.value;
+    require(amount >= minInvestInWei); 
 
-    uint256 tokens = amount.mul(ethExchangeRate);
+    uint256 _exchangeRate = exchangeRateArray[nextExchangeRateIndex - 1].exchangeRateInWei;
+
+    uint256 refund = amount % _exchangeRate;
+    uint256 tokens = (amount - refund) / _exchangeRate;
     require(totalSupply.add(tokens) <= maxTokenSupply);
-
+    totalSupply = totalSupply.add(tokens);
     balances[_payee] = balances[_payee].add(tokens);
 
     if (payees[msg.sender].isExists != true) {
@@ -212,7 +233,10 @@ contract CryptoABS is StandardToken, Ownable {
       payeeArray.push(msg.sender);
     }
 
-    require(owner.send(msg.value));
+    require(owner.send(amount - refund));
+    if (refund > 0) {
+      require(msg.sender.send(refund));
+    }
     return true;
   }
 
@@ -261,12 +285,21 @@ contract CryptoABS is StandardToken, Ownable {
 
   /**
    * @dev add interest to each payees
-   * @param _payee The payee address
-   * @param _interest The interest amount to payee, unit `wei`
    */
-  function depositInterest(address _payee, uint256 _interest) onlyOwner notPaused isInitialized {
-    require(payees[_payee].isExists == true);
-    payees[_payee].interestInWei += _interest;
+  function ownerDepositInterest() onlyOwner isPaused isInitialized {
+    uint256 i = nextPayeeIndex;
+    uint256 payeesLength = payeeArray.length;
+    while (i < payeesLength && msg.gas > 2000000) {
+      address _payee = payeeArray[i];
+      uint256 balance = balances[_payee];
+      if (payees[_payee].isPayable == true && balance > 0) {
+        uint256 _interestInWei = (balance * interestArray[getInterestCount() - 1]) / totalSupply;
+        payees[_payee].interestInWei += _interestInWei;
+        DepositInterest(getInterestCount(), _payee, _interestInWei);
+      }
+      i++;
+    }
+    nextPayeeIndex = i;
   }
 
   /**
@@ -280,54 +313,60 @@ contract CryptoABS is StandardToken, Ownable {
 
   /**
    * @dev withdraw interest by payee
-   * @param _interestInWei Withdraw interest amount
+   * @param _interestInWei Withdraw interest amount in wei
    */
-  function withdrawInterest(uint256 _interestInWei) payable isPayee notPaused isInitialized notLockout {
+  function payeeWithdrawInterest(uint256 _interestInWei) payable isPayee notPaused isInitialized notLockout {
     require(msg.value == 0);
-    uint256 interestInWei = _interestInWei * 1 wei;
+    uint256 interestInWei = _interestInWei;
     require(payees[msg.sender].isPayable == true && _interestInWei <= payees[msg.sender].interestInWei);
     require(msg.sender.send(interestInWei));
     payees[msg.sender].interestInWei -= interestInWei;
+    PayeeWithdrawInterest(msg.sender, interestInWei, payees[msg.sender].interestInWei);
   }
 
   /**
    * @dev withdraw capital by payee
    */
-  function withdrawCapital() payable isPayee notPaused isInitialized overMaturity {
+  function payeeWithdrawCapital() payable isPayee isPaused isInitialized overMaturity {
     require(msg.value == 0);
     require(balances[msg.sender] > 0 && totalSupply > 0);
     require(payees[msg.sender].isPayable == true);
-    uint256 capital = (balances[msg.sender] / totalSupply) * finalizedCapital;
+    uint256 capital = (balances[msg.sender] * finalizedCapital) / totalSupply;
+    balances[msg.sender] = 0;
     require(msg.sender.send(capital));
+    PayeeWithdrawCapital(msg.sender, capital);
   }
 
   /**
    * @dev pause contract
    */
-  function pauseContract() onlyOwner {
+  function ownerPauseContract() onlyOwner {
     paused = true;
   }
 
   /**
    * @dev resume contract
    */
-  function resumeContract() onlyOwner {
+  function ownerResumeContract() onlyOwner {
     paused = false;
   }
 
   /**
-   * @dev set eth exchange rate
-   * @param _ethExchangeRate change rate of ether
+   * @dev set exchange rate in wei, 1 Token = n ETH in wei
+   * @param _exchangeRateInWei change rate of ether
    */
-  function setEthExchangeRate(uint256 _ethExchangeRate) onlyOwner {
-    ethExchangeRate = _ethExchangeRate;
+  function ownerSetExchangeRateInWei(uint256 _exchangeRateInWei) onlyOwner {
+    require(_exchangeRateInWei > 0);
+    var _exchangeRate = ExchangeRate({blockNumber: getBlockNumber(), exchangeRateInWei: _exchangeRateInWei});
+    exchangeRateArray.push(_exchangeRate);
+    nextExchangeRateIndex = exchangeRateArray.length;
   }
 
   /**
    * @dev disable single payee in emergency
    * @param _address Disable payee address
    */
-  function disablePayee(address _address) onlyOwner {
+  function ownerDisablePayee(address _address) onlyOwner {
     require(_address != owner);
     payees[_address].isPayable = false;
   }
@@ -336,7 +375,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @dev enable single payee
    * @param _address Enable payee address
    */
-  function enablePayee(address _address) onlyOwner {
+  function ownerEnablePayee(address _address) onlyOwner {
     payees[_address].isPayable = true;
   }
 
@@ -358,7 +397,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @dev add asset data, audit information
    * @param _data asset data
    */
-  function addAsset(string _data) onlyOwner {
+  function ownerAddAsset(string _data) onlyOwner {
     var _asset = Asset({data: _data});
     assetArray.push(_asset);
   }
@@ -373,28 +412,36 @@ contract CryptoABS is StandardToken, Ownable {
   /**
    * @dev put all capital in this contract
    */
-  function capital() payable isInitialized onlyOwner {
+  function ownerPutCapital() payable isInitialized onlyOwner {
     require(msg.value > 0);
-    finalizedCapital = msg.value * 1 wei;
-    Capital(msg.value);
+    finalizedCapital = msg.value;
   }
 
   /**
    * @dev put interest in this contract
    * @param _times Number of interest
    */
-  function interest(uint256 _times) payable isInitialized onlyOwner {
-    Interest(_times, msg.value);
+  function ownerPutInterest(uint256 _times) payable isInitialized isPaused onlyOwner {
+    require(_times == (getInterestCount() + 1));
+    interestArray.push(msg.value);
+  }
+
+  /**
+   * @dev get interest count
+   */
+  function getInterestCount() constant returns (uint256 result) {
+    return interestArray.length;
   }
 
   /**
    * @dev withdraw balance from contract if emergency
    */
-  function withdraw() payable isInitialized onlyOwner {
+  function ownerWithdraw() payable isInitialized onlyOwner {
     require(owner.send(this.balance));
   }
 
-  event Capital(uint256 _capital);
-  event Interest(uint256 _times, uint256 _interest);
+  event PayeeWithdrawCapital(address _payee, uint256 _capital);
+  event PayeeWithdrawInterest(address _payee, uint256 _interest, uint256 _remainInterest);
+  event DepositInterest(uint256 _times, address _payee, uint256 _interest);
   event Finalized();
 }
