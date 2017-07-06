@@ -206,11 +206,6 @@ contract StandardToken is BasicToken, ERC20 {
 
 }
 
-pragma solidity ^0.4.11;
-
-import "./StandardToken.sol";
-import "./Ownable.sol";
-
 contract CryptoABS is StandardToken, Ownable {
   string public name;                                   // 名稱
   string public symbol;                                 // token 代號
@@ -218,7 +213,7 @@ contract CryptoABS is StandardToken, Ownable {
   address public contractAddress;                       // contract address
 
   uint256 public minEthInvest;                          // 最低投資金額
-  uint256 public ethExchangeRate;                       // 1 ETH = 
+  uint256 public ethExchangeRate;                       // 1 ETH = n token
 
   uint256 public startBlock;                            // ICO 起始的 block number
   uint256 public endBlock;                              // ICO 結束的 block number
@@ -326,6 +321,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _maxTokenSupply maximum toke supply
    * @param _interestRate interest rate
    * @param _interestPeriod interest period
+   * @param _ethExchangeRate ether exchange rate
    */
   function initialize(
       string _name,
@@ -406,7 +402,7 @@ contract CryptoABS is StandardToken, Ownable {
     require(msg.value > 0);
 
     uint256 amount = msg.value / 1 ether;
-    require(amount >= minEthInvest); // TODO: 改成變數
+    require(amount >= minEthInvest);
 
     uint256 tokens = amount.mul(ethExchangeRate);
     require(totalSupply.add(tokens) <= maxTokenSupply);
@@ -563,6 +559,7 @@ contract CryptoABS is StandardToken, Ownable {
 
   /**
    * @dev add asset data, audit information
+   * @param _data asset data
    */
   function addAsset(string _data) onlyOwner {
     var _asset = Asset({data: _data});
@@ -604,4 +601,3 @@ contract CryptoABS is StandardToken, Ownable {
   event Interest(uint256 _times, uint256 _interest);
   event Finalized();
 }
-

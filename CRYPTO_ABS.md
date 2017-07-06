@@ -7,21 +7,24 @@ The following describes CryptoABS functions has been implement.
 ## Specification
 
 This contract have to satisfy following reqires:
-- 合約基礎定義
-    - token name
-    - 利息
-    - token 與 ether 的匯率設定
-    - 發行 token，使用 fallback function
-    - token 允許 ETH 最小購買金額
-    - token 最大發行上限
-    - token 允許兌換成 coin 的鎖定時間
-    - token 閉鎖期
-    - 合約終止 function
-- 合約邏輯
-    - 利息的派發模式，push or pull
-    - token transfer 的方法
-- 合約權限
-    - function 操作權限的設計，modifier owner payee
+- Contract definition
+    - name
+    - symbol
+    - decimals
+    - interest
+        - rate
+        - times
+        - period
+    - eth exchange rate
+    - total supply
+    - minimum ether invest
+    - maximum token supply
+    - token lockout period
+    - financing period
+    - token maturity period
+- Contract permission
+    - contract owner 
+    - payee
 
 ### Version
 
@@ -31,10 +34,10 @@ This contract have to satisfy following reqires:
 
 - SafeMath.sol
 - Ownable.sol
+- ERC20Basic.sol
+- ERC20.sol
 - BasicToken.sol
 - StandardToken.sol
-- ERC20.sol
-- ERC20Basic.sol
 
 ### Structs
 
