@@ -55,8 +55,8 @@ See [test](test) for details.
 
 [CryptoABS.sol](./contracts/CryptoABS.sol): Main contract for the token, CryptoABS follows ERC20 standard.  
 [BasicToken.sol](./contracts/BasicToken.sol): ERC20Basic.sol interface implementation.  
-[StandardToken.sol](./contracts/StandardToken.sol): ERC20.sol interface implementation.
-[ERC20.sol](./contracts/ERC20.sol): ERC20 standard interfaces.
+[StandardToken.sol](./contracts/StandardToken.sol): ERC20.sol interface implementation.  
+[ERC20.sol](./contracts/ERC20.sol): ERC20 standard interfaces.  
 [ERC20Basic.sol](./contracts/ERC20Basic.sol): ERC20 basic interfaces.  
 [Ownable.sol](./contracts/Ownable.sol): Owner ship.  
 [SafeMath.sol](./contracts/SafeMath.sol): Math operations with safety checks.  
