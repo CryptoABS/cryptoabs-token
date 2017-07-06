@@ -33,15 +33,15 @@ Use `testrpc` for local testing.
 ## Requirements
 
 - Token Identifier
+    - name `CryptoABS`
     - symbol `CABS`
-    - name `CryptoABS Token`
     - decimals `0`
-- ETH/CABS Transfer rate
+- CABS/ETH Transfer rate
 
 ## TODO
 
-- Migrate CryptoABS.sol with Multiple Signature Wallet
-- Create Decentralize Token Exchange for CryptoABS.sol
+- Migrate `CryptoABS.sol` with `MultisigWallet.sol`
+- Create Decentralize Token Exchange for `CryptoABS.sol`
 
 ## Contract Design principle
 
@@ -53,7 +53,7 @@ See [test](test) for details.
 
 ## Contracts
 
-[CryptoABS.sol](./contracts/CryptoABS.sol): Main contract for the token, CryptoABS is only partially-ERC20-compliant as it does not implement the `approve(...)`, `allowance(...)` and `transferFrom(...)` functions, and the `Approval(...)` event.  
+[CryptoABS.sol](./contracts/CryptoABS.sol): Main contract for the token, CryptoABS follows ERC20 standard.  
 [BasicToken.sol](./contracts/BasicToken.sol): ERC20Basic.sol interface implementation.  
 [StandardToken.sol](./contracts/StandardToken.sol): ERC20.sol interface implementation.
 [ERC20.sol](./contracts/ERC20.sol): ERC20 standard interfaces.

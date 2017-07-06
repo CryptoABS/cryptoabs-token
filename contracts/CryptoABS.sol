@@ -10,6 +10,7 @@ contract CryptoABS is StandardToken, Ownable {
   address public contractAddress;                       // contract address
 
   uint256 public minInvestInWei;                        // 最低投資金額 in wei
+  uint256 public tokenExchangeRateInWei;                // 1 Token = n ETH in wei
 
   uint256 public startBlock;                            // ICO 起始的 block number
   uint256 public endBlock;                              // ICO 結束的 block number
@@ -31,11 +32,11 @@ contract CryptoABS is StandardToken, Ownable {
 
   struct ExchangeRate {
     uint256 blockNumber;                                // block number
-    uint256 exchangeRateInWei;                          // 1 Token = n ETH in wei
+    uint256 exchangeRateInWei;                          // 1 USD = n ETH in wei, 派發利息使用的利率基準
   }
 
   ExchangeRate[] public exchangeRateArray;              // exchange rate array
-  uint256 public nextExchangeRateIndex;                     // exchange rate last index
+  uint256 public nextExchangeRateIndex;                 // exchange rate last index
   
   uint256[] public interestArray;                       // interest array
 
@@ -136,7 +137,8 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _maxTokenSupply maximum toke supply
    * @param _interestRate interest rate
    * @param _interestPeriod interest period
-   * @param _ethExchangeRateInWei ether exchange rate in wei
+   * @param _tokenExchangeRateInWei token exchange rate in wei
+   * @param _exchangeRateInWei eth exchange rate in wei
    */
   function initialize(
       string _name,
@@ -153,11 +155,10 @@ contract CryptoABS is StandardToken, Ownable {
       uint256 _maxTokenSupply,
       uint256 _interestRate,
       uint256 _interestPeriod,
-      uint256 _ethExchangeRateInWei) onlyOwner {
+      uint256 _tokenExchangeRateInWei,
+      uint256 _exchangeRateInWei) onlyOwner {
     require(bytes(name).length == 0);
     require(bytes(symbol).length == 0);
-    require(bytes(_name).length > 0);
-    require(bytes(_symbol).length > 0);
     require(decimals == 0);
     require(contractAddress == 0x0);
     require(totalSupply == 0);
@@ -185,7 +186,8 @@ contract CryptoABS is StandardToken, Ownable {
     maxTokenSupply = _maxTokenSupply;
     interestRate = _interestRate;
     interestPeriod = _interestPeriod;
-    ownerSetExchangeRateInWei(_ethExchangeRateInWei);
+    tokenExchangeRateInWei = _tokenExchangeRateInWei;
+    ownerSetExchangeRateInWei(_exchangeRateInWei);
     initialized = true;
   }
 
@@ -219,10 +221,8 @@ contract CryptoABS is StandardToken, Ownable {
     uint256 amount = msg.value;
     require(amount >= minInvestInWei); 
 
-    uint256 _exchangeRate = exchangeRateArray[nextExchangeRateIndex - 1].exchangeRateInWei;
-
-    uint256 refund = amount % _exchangeRate;
-    uint256 tokens = (amount - refund) / _exchangeRate;
+    uint256 refund = amount % tokenExchangeRateInWei;
+    uint256 tokens = (amount - refund) / tokenExchangeRateInWei;
     require(totalSupply.add(tokens) <= maxTokenSupply);
     totalSupply = totalSupply.add(tokens);
     balances[_payee] = balances[_payee].add(tokens);
