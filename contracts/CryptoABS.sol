@@ -356,7 +356,7 @@ contract CryptoABS is StandardToken, Ownable {
    */
   function ownerSetExchangeRateInWei(uint256 _exchangeRateInWei) onlyOwner {
     require(_exchangeRateInWei > 0);
-    var _exchangeRate = ExchangeRate({blockNumber: getBlockNumber(), exchangeRateInWei: _exchangeRateInWei});
+    var _exchangeRate = ExchangeRate( getBlockNumber(), _exchangeRateInWei);
     exchangeRateArray.push(_exchangeRate);
     nextExchangeRateIndex = exchangeRateArray.length;
   }
@@ -397,7 +397,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _data asset data
    */
   function ownerAddAsset(string _data) onlyOwner {
-    var _asset = Asset({data: _data});
+    var _asset = Asset(_data);
     assetArray.push(_asset);
   }
 
