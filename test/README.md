@@ -33,21 +33,22 @@ truffle test
 
 - owner initialize with parameters
     - [x] `proxyPayment`, `sendTransaction`: before owner initialize should fail when send transaction
-    - [ ] `initialize`: owner send wrong parameters should fail
+    - [x] `initialize`: owner send wrong parameters should fail
     - [x] `initialize`: owner send wrong parameters should success
 - payee buy token
     - [x] `proxyPayment`, `sendTransaction`: less then ether limit should fail
     - [x] `proxyPayment`, `sendTransaction`: over then ether limit should success
     - [x] `proxyPayment`, `sendTransaction`: should refund when more then expect ether
 - anyone can finalize 
-    - [ ] `finalize`: owner should finalize at anytime, before or after end block
+    - [x] `finalize`: anyone should finalize fail when not over end block
+    - [x] `finalize`: owner should finalize at anytime, before or after end block
     - [ ] `finalize`: anyone should finalize success when over end block
-    - [ ] `finalize`: anyone should finalize fail when over end block
+    - [x] `finalize`: anyone should fail send transaction after finalize
 - payee transfer token
     - [x] `transfer`: new payee should add to payee list correctly
     - [x] `transfer`: payee should transfer success when contract non paused
-    - [ ] `transfer`: payee should transfer fail when contract paused
-    - [ ] `transfer`: over token limit should fail
+    - [x] `transfer`: payee should transfer fail when contract paused
+    - [x] `transfer`: over token limit should fail
     - [ ] `transferFrom`: payee should trigger transferFrom fail when contract paused
 - owner pause contract
     - [x] `ownerPauseContract`: should pause contract success
@@ -57,15 +58,17 @@ truffle test
     - [x] `ownerPutInterest`: owner should put interest to contract fail when contract not paused
     - [x] `ownerPutInterest`: owner should put interest to contract success when contract paused
 - payee withdraw interest
-    - [ ] `payeeWithdrawInterest`: payee should withdraw interest success when non-paused
-    - [ ] `payeeWithdrawInterest`: payee should withdraw interest fail when paused
-    - [ ] `payeeWithdrawInterest`: payee should withdraw interest fail when over interest amount
+    - [x] `payeeWithdrawInterest`: payee should withdraw interest fail when contract paused
+    - [x] `payeeWithdrawInterest`: payee should withdraw interest success when contract not paused
+    - [x] `payeeWithdrawInterest`: payee should withdraw interest fail when over interest amount
+    - [x] `payeeWithdrawInterest`: payee should fail withdraw interest when disabled payee
 - owner put capital
     - [ ] `ownerPutCapital`: owner should put capital to contract success when contract paused
     - [ ] `ownerPutCapital`: owner should put capital to contract fail when contract not paused
 - payee withdraw capital
     - [ ] `payeeWithdrawCapital`: payee should withdraw capital success when contract paused
     - [ ] `payeeWithdrawCapital`: payee should withdraw capital fail when contract not paused
+    - [ ] `payeeWithdrawCapital`: payee should fail withdraw capital when disabled payee
 - ownership switch
     - [x] `transferOwnership`: transfer ownership should fail when not owner
     - [x] `transferOwnership`: transfer ownership should success when not owner

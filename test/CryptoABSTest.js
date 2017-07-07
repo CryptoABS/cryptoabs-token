@@ -46,17 +46,59 @@ contract("CryptoABS", function(accounts) {
   /**
    * 1.2 owner send wrong parameters should fail
    */
+  it("1.2. owner send wrong parameters should fail", function() {
+    var cryptoABS;
+    var name = "CryptoABS";
+    var symbol = "CABS";
+    var decimals = 0;
+    var startBlock = web3.eth.blockNumber;    // each transaction will add 1 block number
+    var endBlock = web3.eth.blockNumber + 10000;
+    var initializedTime = 0;                      // 要設定非常小的數字才有辦法測試
+    var financingPeriod = 1;                      // 融資期間
+    var tokenLockoutPeriod = 1;                   // 閉鎖期間
+    var tokenMaturityPeriod = 86400 * 2;          // 債券到期日
+    var minEthInvest = 1000000000000000000;    // 購買 Token 最小單位
+    var maxTokenSupply = 10000;
+    var interestRate = 8;
+    var interestPeriod = 86400 * 30;
+    var ethExchangeRate = 1000000000000000000 / 280;
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.initialize(
+        name,
+        symbol,
+        decimals,
+        cryptoABS.address,
+        startBlock, 
+        endBlock, 
+        initializedTime, 
+        financingPeriod, 
+        tokenLockoutPeriod,
+        tokenMaturityPeriod,
+        minEthInvest,
+        maxTokenSupply,
+        interestRate,
+        interestPeriod,
+        tokenExchangeRate,
+        ethExchangeRate);
+    }).catch(function(err) {
+      assert.isDefined(err, "initialize fail");
+      return cryptoABS.initialized.call();
+    }).then(function(initialized) {
+      assert.equal(initialized, false, "initialized fail wasn't correctly");
+    });
+  });
 
   /**
-   * 1.3 owner send wrong parameters should success
+   * 1.3 owner send correct parameters should success
    */
-  it("1.3. owner send wrong parameters should success", function() {
+  it("1.3. owner send correct parameters should success", function() {
     var cryptoABS;
     var name = "CryptoABS";
     var symbol = "CABS";
     var decimals = 0;
     var startBlock = web3.eth.blockNumber + 2;    // each transaction will add 1 block number
-    var endBlock = web3.eth.blockNumber + 10000;
+    var endBlock = web3.eth.blockNumber + 10;
     var initializedTime = 0;                      // 要設定非常小的數字才有辦法測試
     var financingPeriod = 1;                      // 融資期間
     var tokenLockoutPeriod = 1;                   // 閉鎖期間
@@ -142,6 +184,62 @@ contract("CryptoABS", function(accounts) {
   });
 
   /**
+   * 3.1. anyone should finalize fail when not over end block
+   */
+  it("3.1. anyone should finalize fail when not over end block", function() {
+    var cryptoABS;
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.finalize({from: accounts[5]});
+    }).then(function() {
+      assert.equal(false, true, "finalize call wasn't correctly");
+    }).catch(function(err) {
+      assert.isDefined(err, "finalize fail");
+      return cryptoABS.finalizedTime.call();
+    }).then(function(finalizedTime) {
+      assert.equal(finalizedTime, 0, "finalizedTime wasn't correctly");
+      return cryptoABS.finalizedBlock.call();
+    }).then(function(finalizedBlock) {
+      assert.equal(finalizedBlock, 0, "finalizedTime wasn't correctly");
+    });
+  });
+
+  /**
+   * 3.2. owner should finalize at anytime, before or after end block
+   */
+  it("3.2. owner should finalize at anytime, before or after end block", function() {
+    var cryptoABS;
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.finalize({from: accounts[0]});
+    }).then(function() {
+      return cryptoABS.finalizedTime.call();
+    }).then(function(finalizedTime) {
+      assert.equal(finalizedTime > 0, true, "finalizedTime wasn't correctly");
+      return cryptoABS.finalizedBlock.call();
+    }).then(function(finalizedBlock) {
+      assert.equal(finalizedBlock.toNumber(), web3.eth.blockNumber, "finalizedBlock wasn't correctly");
+    });
+  });
+
+  /**
+   * 3.4. anyone should fail send transaction after finalize
+   */
+  it("3.4. anyone should fail send transaction after finalize", function() {
+    var cryptoABS;
+    var ether = 3;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      web3.eth.sendTransaction({ from: accounts[6], to: cryptoABS.address, value: web3.toWei(ether, "ether"), gas: 2000000 });
+    }).then(function() {
+      assert.equal(false, true, "transaction wasn't fail correctly");
+    }).catch(function(err) {
+      assert.isDefined(err, "transaction should have thrown");
+    });
+  });
+
+  /**
    * 4.1. new payee should add to payee list correctly
    * 4.2. payee should transfer success when contract non paused
    */
@@ -181,6 +279,56 @@ contract("CryptoABS", function(accounts) {
       return cryptoABS.paused.call();
     }).then(function(paused) {
       assert.equal(paused, true, "pause contract wasn't correctly");
+    });
+  });
+
+  /**
+   * 4.3. payee should transfer fail when contract paused
+   */
+  it("4.3. payee should transfer fail when contract paused", function() {
+    var cryptoABS;
+    var token = 1;
+    var receiver_start_token;
+    var receiver_end_token;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+    }).then(function() {
+      return cryptoABS.balanceOf(accounts[3]);
+    }).then(function(balance) {
+      receiver_start_token = balance.valueOf();
+      return cryptoABS.transfer(accounts[3], token, {from: accounts[2]});
+    }).catch(function(err) {
+      assert.isDefined(err, "transfer fail when contract paused");
+      return cryptoABS.balanceOf(accounts[3]);
+    }).then(function(balance) {
+      receiver_end_token = balance.valueOf();
+      assert.equal(receiver_end_token, receiver_start_token, "token transfer wasn't correctly");
+    });
+  });
+
+  /**
+   * 4.4. over token limit should fail
+   */
+  it("4.4. over token limit should fail", function() {
+    var cryptoABS;
+    var token = 10;
+    var receiver_start_token;
+    var receiver_end_token;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+    }).then(function() {
+      return cryptoABS.balanceOf(accounts[3]);
+    }).then(function(balance) {
+      receiver_start_token = balance.valueOf();
+      return cryptoABS.transfer(accounts[3], token, {from: accounts[2]});
+    }).catch(function(err) {
+      assert.isDefined(err, "transfer fail when contract paused");
+      return cryptoABS.balanceOf(accounts[3]);
+    }).then(function(balance) {
+      receiver_end_token = balance.valueOf();
+      assert.equal(receiver_end_token, receiver_start_token, "token transfer wasn't correctly");
     });
   });
 
@@ -265,6 +413,130 @@ contract("CryptoABS", function(accounts) {
       return cryptoABS.paused.call();
     }).then(function(paused) { 
       assert.equal(paused, false, "resume contract wasn't correctly");
+    });
+  });
+
+  /**
+   * 7.1. payee should withdraw interest fail when paused
+   */
+  it("7.1. payee should withdraw interest fail when paused", function() {
+    var cryptoABS;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.ownerPauseContract();
+    }).then(function() {
+      return cryptoABS.paused.call();
+    }).then(function(paused) { 
+      assert.equal(paused, true, "pause contract wasn't correctly");
+    }).then(function() {
+      return cryptoABS.interestOf.call(accounts[2]);
+    }).then(function(interest) {
+      assert.equal(interest.toNumber(), web3.toWei(0.15, "ether"), "get interest wasn't correctly");
+      return cryptoABS.payeeWithdrawInterest(web3.toWei(0.1, "ether"), {from: accounts[2]});
+    }).then(function() {
+      assert.equal(false, true, "payee withdraw interest fail wasn't correctly");
+    }).catch(function(err) {
+      assert.isDefined(err, "payee withdraw interest fail should throw");
+      return cryptoABS.ownerResumeContract();
+    }).then(function() {
+      return cryptoABS.paused.call();
+    }).then(function(paused) { 
+      assert.equal(paused, false, "resume contract wasn't correctly");
+    });
+  });
+
+  /**
+   * 7.1. payee should withdraw interest fail when contract paused
+   */
+  it("7.1. payee should withdraw interest fail when contract paused", function() {
+    var cryptoABS;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.ownerPauseContract();
+    }).then(function() {
+      return cryptoABS.paused.call();
+    }).then(function(paused) { 
+      assert.equal(paused, true, "pause contract wasn't correctly");
+    }).then(function() {
+      return cryptoABS.interestOf.call(accounts[2]);
+    }).then(function(interest) {
+      assert.equal(interest.toNumber(), web3.toWei(0.15, "ether"), "get interest wasn't correctly");
+      return cryptoABS.payeeWithdrawInterest(web3.toWei(0.1, "ether"), {from: accounts[2]});
+    }).then(function() {
+      assert.equal(false, true, "payee withdraw interest fail wasn't correctly");
+    }).catch(function(err) {
+      assert.isDefined(err, "payee withdraw interest fail should throw");
+      return cryptoABS.ownerResumeContract();
+    }).then(function() {
+      return cryptoABS.paused.call();
+    }).then(function(paused) { 
+      assert.equal(paused, false, "resume contract wasn't correctly");
+    });
+  });
+
+  /**
+   * 7.2. payee should withdraw interest success when contract not paused
+   */
+  it("7.2. payee should withdraw interest fail when contract paused", function() {
+    var cryptoABS;
+    var totalInterest;
+    var withdrawAmount = web3.toWei(0.1, "ether");
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+    }).then(function() {
+      return cryptoABS.interestOf.call(accounts[2]);
+    }).then(function(interest) {
+      totalInterest = interest.toNumber();
+      return cryptoABS.payeeWithdrawInterest(withdrawAmount, {from: accounts[2]});
+    }).then(function() {
+      return cryptoABS.interestOf.call(accounts[2]);
+    }).then(function(interest) {
+      assert.equal(interest.toNumber(), totalInterest - withdrawAmount, "payee withdraw interest wasn't correctly");
+    });
+  });
+
+  /**
+   * 7.3. payee should withdraw interest fail when over interest amount
+   */
+  it("7.3. payee should withdraw interest fail when over interest amount", function() {
+    var cryptoABS;
+    var withdrawAmount = web3.toWei(0.1, "ether");
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.payeeWithdrawInterest(withdrawAmount, {from: accounts[2]});
+    }).then(function() {
+      assert.equal(false, true, "payee withdraw interest wasn't correctly");
+    }).catch(function(err) {
+      assert.isDefined(err, "payee withdraw interest over interest remaing should throw");
+    });
+  });
+
+  /**
+   * 7.4. payee should fail withdraw interest when disabled payee
+   */
+  it("7.4. payee should fail withdraw interest when disabled payee", function() {
+    var cryptoABS;
+    var withdrawAmount;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.interestOf.call(accounts[2]);
+    }).then(function(interest) {
+      withdrawAmount = interest.toNumber();
+      return cryptoABS.ownerDisablePayee(accounts[2]);
+    }).then(function() {
+      return cryptoABS.payees(accounts[2]);
+    }).then(function(result) {
+      assert.equal(result[1], false, "disable payee wasn't correctly");
+      return cryptoABS.payeeWithdrawInterest(withdrawAmount, {from: accounts[2]});
+    }).then(function() {
+      assert.equal(false, true, "payee withdraw interest when disabled wasn't correctly");
+    }).catch(function(err) {
+      assert.isDefined(err, "payee withdraw interest when disabled should throw");
     });
   });
 
