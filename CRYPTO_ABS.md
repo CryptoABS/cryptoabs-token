@@ -246,3 +246,12 @@ function withdraw() onlyOwner;
 ```
 
 Only owner can withdraw balance from contract
+
+#### Events
+
+```javascript
+event PayeeWithdrawCapital(address _payee, uint256 _capital);
+event PayeeWithdrawInterest(address _payee, uint256 _interest, uint256 _remainInterest);
+event DepositInterest(uint256 _times, address _payee, uint256 _interest);
+event Finalized();
+```
