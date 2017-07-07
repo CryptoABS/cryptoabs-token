@@ -1,3 +1,4 @@
+var sleep = require("sleep");
 var CryptoABS = artifacts.require("../contracts/CryptoABS.sol");
 
 /**
@@ -27,6 +28,10 @@ var CryptoABS = artifacts.require("../contracts/CryptoABS.sol");
  */
 contract("CryptoABS", function(accounts) {
   var tokenExchangeRate = 1000000000000000000; // 1 Token = 1 ETH = n USD
+  var unixTime = Math.round(new Date() / 1000);
+  var financingPeriod = 5;                      // 融資期間
+  var tokenLockoutPeriod = 5;                   // 閉鎖期間
+  var tokenMaturityPeriod = 15;                 // 債券到期日
 
   /**
    * 1.1 before owner initialize should fail when send transaction
@@ -51,12 +56,9 @@ contract("CryptoABS", function(accounts) {
     var name = "CryptoABS";
     var symbol = "CABS";
     var decimals = 0;
-    var startBlock = web3.eth.blockNumber;    // each transaction will add 1 block number
+    var startBlock = web3.eth.blockNumber;     // each transaction will add 1 block number
     var endBlock = web3.eth.blockNumber + 10000;
-    var initializedTime = 0;                      // 要設定非常小的數字才有辦法測試
-    var financingPeriod = 1;                      // 融資期間
-    var tokenLockoutPeriod = 1;                   // 閉鎖期間
-    var tokenMaturityPeriod = 86400 * 2;          // 債券到期日
+    var initializedTime = 0;                      
     var minEthInvest = 1000000000000000000;    // 購買 Token 最小單位
     var maxTokenSupply = 10000;
     var interestRate = 8;
@@ -99,14 +101,11 @@ contract("CryptoABS", function(accounts) {
     var decimals = 0;
     var startBlock = web3.eth.blockNumber + 2;    // each transaction will add 1 block number
     var endBlock = web3.eth.blockNumber + 10;
-    var initializedTime = 0;                      // 要設定非常小的數字才有辦法測試
-    var financingPeriod = 1;                      // 融資期間
-    var tokenLockoutPeriod = 1;                   // 閉鎖期間
-    var tokenMaturityPeriod = 86400 * 2;          // 債券到期日
-    var minEthInvest = 1000000000000000000;    // 購買 Token 最小單位
+    var initializedTime = unixTime;               
+    var minEthInvest = 1000000000000000000;       // 購買 Token 最小單位
     var maxTokenSupply = 10000;
     var interestRate = 8;
-    var interestPeriod = 86400 * 30;
+    var interestPeriod = 15;
     var ethExchangeRate = 1000000000000000000 / 280;
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
@@ -254,6 +253,13 @@ contract("CryptoABS", function(accounts) {
       return cryptoABS.balanceOf(accounts[3]);
     }).then(function(balance) {
       receiver_start_token = balance.valueOf();
+      // during LockOut period should fail transfer
+      return cryptoABS.transfer(accounts[3], token, {from: accounts[2]});
+    }).catch(function(err) {
+      assert.equal(Math.round(new Date() / 1000) < (unixTime + financingPeriod + tokenLockoutPeriod), true, "during lock out period wasn't correctly");
+      assert.isDefined(err, "during lock out period should throw");
+      // Wait for 10 seconds, until LockOut period open
+      sleep.sleep(10);
       return cryptoABS.transfer(accounts[3], token, {from: accounts[2]});
     }).then(function() {
       return cryptoABS.balanceOf(accounts[3]);
@@ -382,6 +388,8 @@ contract("CryptoABS", function(accounts) {
     }).then(function(paused) { 
       assert.equal(paused, false, "contract not pause wasn't correctly");
       return cryptoABS.ownerPutInterest(1, {from: accounts[0], value: web3.toWei(interest, "ether")});
+    }).then(function() {
+      assert.equal(false, true, "owner put interest when contract not pause wasn't correctly");
     }).catch(function(err) {
       assert.isDefined(err, "owner put interest should have thrown");
     });
@@ -408,36 +416,6 @@ contract("CryptoABS", function(accounts) {
       return cryptoABS.interestOf.call(accounts[2]);
     }).then(function(interest) {
       assert.equal(interest.toNumber(), web3.toWei(0.15, "ether"), "add interest wasn't correctly");
-      return cryptoABS.ownerResumeContract();
-    }).then(function() {
-      return cryptoABS.paused.call();
-    }).then(function(paused) { 
-      assert.equal(paused, false, "resume contract wasn't correctly");
-    });
-  });
-
-  /**
-   * 7.1. payee should withdraw interest fail when paused
-   */
-  it("7.1. payee should withdraw interest fail when paused", function() {
-    var cryptoABS;
-
-    return CryptoABS.deployed().then(function(instance) {
-      cryptoABS = instance;
-      return cryptoABS.ownerPauseContract();
-    }).then(function() {
-      return cryptoABS.paused.call();
-    }).then(function(paused) { 
-      assert.equal(paused, true, "pause contract wasn't correctly");
-    }).then(function() {
-      return cryptoABS.interestOf.call(accounts[2]);
-    }).then(function(interest) {
-      assert.equal(interest.toNumber(), web3.toWei(0.15, "ether"), "get interest wasn't correctly");
-      return cryptoABS.payeeWithdrawInterest(web3.toWei(0.1, "ether"), {from: accounts[2]});
-    }).then(function() {
-      assert.equal(false, true, "payee withdraw interest fail wasn't correctly");
-    }).catch(function(err) {
-      assert.isDefined(err, "payee withdraw interest fail should throw");
       return cryptoABS.ownerResumeContract();
     }).then(function() {
       return cryptoABS.paused.call();
@@ -537,6 +515,119 @@ contract("CryptoABS", function(accounts) {
       assert.equal(false, true, "payee withdraw interest when disabled wasn't correctly");
     }).catch(function(err) {
       assert.isDefined(err, "payee withdraw interest when disabled should throw");
+    });
+  });
+
+  /**
+   * 8.1. owner should put capital to contract fail when contract not paused
+   */
+  it("8.1. owner should put capital to contract fail when contract not paused", function() {
+    var cryptoABS;
+    var capital = 10;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.paused.call();
+    }).then(function(paused) { 
+      assert.equal(paused, false, "contract not pause wasn't correctly");
+      return cryptoABS.ownerPutCapital({from: accounts[0], value: web3.toWei(capital, "ether")});
+    }).then(function() {
+      assert.equal(false, true, "owner put capital when contract not pause wasn't correctly");
+    }).catch(function(err) {
+      assert.isDefined(err, "owner put capital should have thrown");
+    });
+  });
+
+  /**
+   * 8.2. owner should put capital to contract success when contract paused
+   */
+  it("8.2. owner should put capital to contract success when contract paused", function() {
+    var cryptoABS;
+    var capital = 10;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.ownerPauseContract();
+    }).then(function() {
+      return cryptoABS.paused.call();
+    }).then(function(paused) { 
+      assert.equal(paused, true, "pause contract wasn't correctly");
+      return cryptoABS.ownerPutCapital({from: accounts[0], value: web3.toWei(capital, "ether")});
+    }).then(function() {
+      return cryptoABS.finalizedCapital.call();
+    }).then(function(finalizedCapital) {
+      assert.equal(finalizedCapital.toNumber(), web3.toWei(capital, "ether"), "put capital wasn't correctly");
+      return cryptoABS.ownerResumeContract();
+    }).then(function() {
+      return cryptoABS.paused.call();
+    }).then(function(paused) { 
+      assert.equal(paused, false, "resume contract wasn't correctly");
+    });
+  });
+
+  /**
+   * 9.1. payee should withdraw capital fail when not over maturity
+   */
+  it("9.1. payee should withdraw capital fail when not over maturity", function() {
+    var cryptoABS;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.ownerPauseContract();
+    }).then(function() {
+      return cryptoABS.paused.call();
+    }).then(function(paused) {
+      assert.equal(paused, true, "pause contract wasn't correctly");
+      return cryptoABS.payeeWithdrawCapital({from: accounts[2]});
+    }).then(function() {
+      assert.equal(false, true, "payee withdraw capital fail when not over maturity wasn't correctly");
+    }).catch(function(err) {
+      assert.equal(Math.round(new Date() / 1000) < (unixTime + financingPeriod + tokenMaturityPeriod), true, "during maturity period wasn't correctly");
+      assert.isDefined(err, "payee withdraw capital should have thrown");
+    });
+  });
+
+  /**
+   * 9.2. payee should withdraw capital fail when disabled payee
+   */
+  it("9.2. payee should withdraw capital fail when disabled payee", function() {
+    var cryptoABS;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      cryptoABS = instance;
+      return cryptoABS.payees(accounts[2]);
+    }).then(function(payee) {
+      assert.equal(payee[1], false, "disabled payee wasn't correctly");
+      sleep.sleep(10);
+      assert.equal(Math.round(new Date() / 1000) > (unixTime + financingPeriod + tokenMaturityPeriod), true, "over maturity period wasn't correctly");
+      return cryptoABS.payeeWithdrawCapital({from: accounts[2]});
+    }).then(function() {
+      assert.equal(false, true, "payee withdraw capital fail when disabled payee wasn't correctly");
+    }).catch(function(err) {
+      assert.isDefined(err, "payee withdraw capital should have thrown");
+    });
+  });
+
+  /**
+   * 9.3. payee should withdraw capital success when contract paused and over maturity
+   */
+  it("9.3. payee should withdraw capital success when contract paused and over maturity", function() {
+    var cryptoABS;
+    var payee_start_balance;
+    var payee_end_balance;
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.balanceOf(accounts[3]);
+    }).then(function(balance) {
+      payee_start_balance = balance.toNumber();
+      assert.equal(payee_start_balance > 0, true, "payee start balance wasn't correctly");
+      return cryptoABS.payeeWithdrawCapital({from: accounts[3]});
+    }).then(function() {
+      return cryptoABS.balanceOf(accounts[3]);
+    }).then(function(balance) {
+      payee_end_balance = balance.toNumber();
+      assert.equal(payee_end_balance, 0, "payee withdraw capital success when over maturity wasn't correctly");
     });
   });
 

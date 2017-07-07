@@ -42,14 +42,12 @@ truffle test
 - anyone can finalize 
     - [x] `finalize`: anyone should finalize fail when not over end block
     - [x] `finalize`: owner should finalize at anytime, before or after end block
-    - [ ] `finalize`: anyone should finalize success when over end block
     - [x] `finalize`: anyone should fail send transaction after finalize
 - payee transfer token
     - [x] `transfer`: new payee should add to payee list correctly
     - [x] `transfer`: payee should transfer success when contract non paused
     - [x] `transfer`: payee should transfer fail when contract paused
     - [x] `transfer`: over token limit should fail
-    - [ ] `transferFrom`: payee should trigger transferFrom fail when contract paused
 - owner pause contract
     - [x] `ownerPauseContract`: should pause contract success
     - [x] `ownerResumeContract`: should resume contract success
@@ -63,12 +61,12 @@ truffle test
     - [x] `payeeWithdrawInterest`: payee should withdraw interest fail when over interest amount
     - [x] `payeeWithdrawInterest`: payee should fail withdraw interest when disabled payee
 - owner put capital
-    - [ ] `ownerPutCapital`: owner should put capital to contract success when contract paused
-    - [ ] `ownerPutCapital`: owner should put capital to contract fail when contract not paused
+    - [x] `ownerPutCapital`: owner should put capital to contract fail when contract not paused
+    - [x] `ownerPutCapital`: owner should put capital to contract success when contract paused
 - payee withdraw capital
-    - [ ] `payeeWithdrawCapital`: payee should withdraw capital success when contract paused
-    - [ ] `payeeWithdrawCapital`: payee should withdraw capital fail when contract not paused
-    - [ ] `payeeWithdrawCapital`: payee should fail withdraw capital when disabled payee
+    - [x] `payeeWithdrawCapital`: payee should withdraw capital fail when not over maturity
+    - [x] `payeeWithdrawCapital`: payee should withdraw capital fail when disabled payee
+    - [x] `payeeWithdrawCapital`: payee should withdraw capital success when contract paused and over maturity
 - ownership switch
     - [x] `transferOwnership`: transfer ownership should fail when not owner
     - [x] `transferOwnership`: transfer ownership should success when not owner

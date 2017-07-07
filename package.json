@@ -9,6 +9,7 @@
     "truffle": "^3.2.4"
   },
   "dependencies": {
+    "sleep": "^5.1.1",
     "truffle-hdwallet-provider": "0.0.3",
     "zeppelin-solidity": "^1.0.7"
   }

@@ -16,15 +16,15 @@ contract CryptoABS is StandardToken, Ownable {
   uint256 public endBlock;                              // ICO 結束的 block number
   uint256 public maxTokenSupply;                        // ICO 的 max token，透過 USD to ETH 換算出來
   
-  uint256 public initalizedTime;                        // 起始時間，合約部署的時候會寫入
+  uint256 public initializedTime;                       // 起始時間，合約部署的時候會寫入
   uint256 public financingPeriod;                       // token 籌資期間
   uint256 public tokenLockoutPeriod;                    // token 閉鎖期，閉鎖期內不得 transfer
   uint256 public tokenMaturityPeriod;                   // token 到期日
 
   bool public paused;                                   // 暫停合約功能執行
   bool public initialized;                              // 合約啟動
-  uint256 public finalizedBlock;                        // 合約終止的區塊編號
-  uint256 public finalizedTime;                         // 合約終止的時間
+  uint256 public finalizedBlock;                        // 合約終止投資的區塊編號
+  uint256 public finalizedTime;                         // 合約終止投資的時間
   uint256 public finalizedCapital;                      // 合約到期的 ETH 金額
   uint256 public interestRate;                          // 利率，公開資訊提供查詢，initialized 後不再更動
   uint256 public interestTimes;                         // 派息次數，公開資訊提供查詢，initialized 後不再更動
@@ -103,7 +103,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @dev Throws if token in lockout period. 
    */
   modifier notLockout() {
-    require(now > (initalizedTime + financingPeriod + tokenLockoutPeriod));
+    require(now > (initializedTime + financingPeriod + tokenLockoutPeriod));
     _;
   }
   
@@ -111,7 +111,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @dev Throws if not over maturity date. 
    */
   modifier overMaturity() {
-    require(now > (initalizedTime + financingPeriod + tokenMaturityPeriod));
+    require(now > (initializedTime + financingPeriod + tokenMaturityPeriod));
     _;
   }
 
@@ -168,7 +168,7 @@ contract CryptoABS is StandardToken, Ownable {
     require(financingPeriod == 0);
     require(tokenLockoutPeriod == 0);
     require(tokenMaturityPeriod == 0);
-    require(initalizedTime == 0);
+    require(initializedTime == 0);
     require(_maxTokenSupply >= totalSupply);
     require(interestRate == 0);
     require(interestPeriod == 0);
@@ -178,7 +178,7 @@ contract CryptoABS is StandardToken, Ownable {
     contractAddress = _contractAddress;
     startBlock = _startBlock;
     endBlock = _endBlock;
-    initalizedTime = _initializedTime;
+    initializedTime = _initializedTime;
     financingPeriod = _financingPeriod;
     tokenLockoutPeriod = _tokenLockoutPeriod;
     tokenMaturityPeriod = _tokenMaturityPeriod;
@@ -330,7 +330,6 @@ contract CryptoABS is StandardToken, Ownable {
   function payeeWithdrawCapital() payable isPayee isPaused isInitialized overMaturity {
     require(msg.value == 0);
     require(balances[msg.sender] > 0 && totalSupply > 0);
-    require(payees[msg.sender].isPayable == true);
     uint256 capital = (balances[msg.sender] * finalizedCapital) / totalSupply;
     balances[msg.sender] = 0;
     require(msg.sender.send(capital));
@@ -412,7 +411,7 @@ contract CryptoABS is StandardToken, Ownable {
   /**
    * @dev put all capital in this contract
    */
-  function ownerPutCapital() payable isInitialized onlyOwner {
+  function ownerPutCapital() payable isInitialized isPaused onlyOwner {
     require(msg.value > 0);
     finalizedCapital = msg.value;
   }
