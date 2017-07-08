@@ -29,6 +29,10 @@ truffle console
 truffle test
 ```
 
+## Solidity coverage
+
+See [COVERAGE.md](./COVERAGE.md) for more details.
+
 ## Test cases
 
 - owner initialize with parameters
@@ -48,6 +52,7 @@ truffle test
     - [x] `transfer`: payee should transfer success when contract non paused
     - [x] `transfer`: payee should transfer fail when contract paused
     - [x] `transfer`: over token limit should fail
+    - [ ] `transferFrom`: payee transfer tokens from one address to another
 - owner pause contract
     - [x] `ownerPauseContract`: should pause contract success
     - [x] `ownerResumeContract`: should resume contract success
@@ -79,3 +84,4 @@ truffle test
     - [x] `getAssetCount`: get asset count
 - [x] `getPayeeCount`: get payee count
 - [x] `getInterestCount`: get interest count
+- [ ] `ownerWithdraw`: owner withdraw contract balance

@@ -4,3 +4,7 @@ build
 contracts/zeppelin
 .memo
 .settings
+originalContracts
+solcover
+coverage
+coverage.json

@@ -6,6 +6,7 @@
   "devDependencies": {
     "eslint": "^4.1.1",
     "ethereumjs-testrpc": "^3.0.2",
+    "solidity-coverage": "^0.1.7",
     "truffle": "^3.2.4"
   },
   "dependencies": {
