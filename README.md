@@ -1,8 +1,8 @@
 # CryptoABS Token
 
-- Website: http://cryptoabs.com/
-- Whitepaper: https://github.com/cryptoabs/cryptoabs
-- CryptoABS Contract: https://github.com/CryptoABS/cryptoabs-token/CRYPTO_ABS.md
+- Website: [https://cryptoabs.com/](https://cryptoabs.com/)
+- Whitepaper: [https://github.com/cryptoabs/cryptoabs](https://github.com/cryptoabs/cryptoabs)
+- CryptoABS Contract: [https://github.com/CryptoABS/cryptoabs-token/CRYPTO_ABS.md](./CRYPTO_ABS.md)
 
 ----
 
