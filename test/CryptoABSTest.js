@@ -179,6 +179,8 @@ contract("CryptoABS", function(accounts) {
       assert.equal(web3.fromWei(owner_start_amount), web3.fromWei(owner_end_amount) - realEther, "owner wasn't accept ether correctley");
       assert.equal(payee_end_amount < payee_start_amount, true, "payee wasn't send ether correctley");
       assert.equal(balance.valueOf(), web3.toWei(realEther, "ether") / tokenExchangeRate, "token amount wasn't correctly in the first account");
+
+      web3.eth.sendTransaction({ from: accounts[4], to: cryptoABS.address, value: web3.toWei(ether, "ether"), gas: 2000000 });
     });
   });
 
@@ -268,7 +270,7 @@ contract("CryptoABS", function(accounts) {
       assert.equal(receiver_end_token - token, receiver_start_token, "token transfer wasn't correctly");
       return cryptoABS.getPayeeCount.call();
     }).then(function(count){
-      assert.equal(count, 2, "after transfer payee count wasn't correctly");
+      assert.equal(count, 3, "after transfer payee count wasn't correctly");
     });
   });
 
@@ -299,11 +301,12 @@ contract("CryptoABS", function(accounts) {
 
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
-    }).then(function() {
       return cryptoABS.balanceOf(accounts[3]);
     }).then(function(balance) {
       receiver_start_token = balance.valueOf();
       return cryptoABS.transfer(accounts[3], token, {from: accounts[2]});
+    }).then(function() {
+      assert.equal(false, true, "payee transfer fail when contract paused wasn't correctly");
     }).catch(function(err) {
       assert.isDefined(err, "transfer fail when contract paused");
       return cryptoABS.balanceOf(accounts[3]);
@@ -324,11 +327,12 @@ contract("CryptoABS", function(accounts) {
 
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
-    }).then(function() {
       return cryptoABS.balanceOf(accounts[3]);
     }).then(function(balance) {
       receiver_start_token = balance.valueOf();
       return cryptoABS.transfer(accounts[3], token, {from: accounts[2]});
+    }).then(function() {
+      assert.equal(false, true, "payee transfer fail wasn't correctly");
     }).catch(function(err) {
       assert.isDefined(err, "transfer fail when contract paused");
       return cryptoABS.balanceOf(accounts[3]);
@@ -339,9 +343,26 @@ contract("CryptoABS", function(accounts) {
   });
 
   /**
-   * 5.2. should resume contract fail
+   * 4.5. allow another payee to withdraw from origin payee account
    */
-  it("5.2. should resume contract fail", function() {
+  it("4.5. allow another payee to withdraw from origin payee account \r\n      " + 
+    "4.6. returns the amount which another payee is still allowed to withdraw from origin payee", function() {
+    var cryptoABS;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.approve(accounts[7], 1, {from: accounts[4]});
+    }).then(function() {
+      return cryptoABS.allowance(accounts[4], accounts[7]);
+    }).then(function(remaing) {
+      assert.equal(remaing, 1, "remaing token amount wasn't correctly");
+    });
+  });
+
+  /**
+   * 5.2. should resume contract success
+   */
+  it("5.2. should resume contract success", function() {
     var cryptoABS;
 
     return CryptoABS.deployed().then(function(instance) {
@@ -351,6 +372,38 @@ contract("CryptoABS", function(accounts) {
       return cryptoABS.paused.call();
     }).then(function(paused) {
       assert.equal(paused, false, "resume contract wasn't correctly");
+    });
+  });
+
+  /**
+   * 4.7. payee transfer tokens from one address to another
+   */
+  it("4.7. payee transfer tokens from one address to another", function() {
+    var cryptoABS;
+    var sender_start_token;
+    var sender_end_token;
+    var receiver_start_token;
+    var receiver_end_token;
+    var token = 1;
+
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      return cryptoABS.balanceOf(accounts[4]);
+    }).then(function(balance) {
+      sender_start_token = balance.toNumber();
+      return cryptoABS.balanceOf(accounts[7]);
+    }).then(function(balance) {
+      receiver_start_token = balance.toNumber();
+      return cryptoABS.transferFrom(accounts[4], accounts[7], token, {from: accounts[7]});
+    }).then(function() {
+      return cryptoABS.balanceOf(accounts[4]);
+    }).then(function(balance) {
+      sender_end_token = balance.toNumber();
+      return cryptoABS.balanceOf(accounts[7]);
+    }).then(function(balance) {
+      receiver_end_token = balance.toNumber();
+      assert.equal(sender_start_token - token, sender_end_token, "sender token balance wasn't correctly");
+      assert.equal(receiver_end_token - token, receiver_start_token, "receiver token balance wasn't correctly");
     });
   });
 
@@ -415,7 +468,7 @@ contract("CryptoABS", function(accounts) {
     }).then(function() {
       return cryptoABS.interestOf.call(accounts[2]);
     }).then(function(interest) {
-      assert.equal(interest.toNumber(), web3.toWei(0.15, "ether"), "add interest wasn't correctly");
+      assert.equal(interest.toNumber(), web3.toWei(0.075, "ether"), "add interest wasn't correctly");
       return cryptoABS.ownerResumeContract();
     }).then(function() {
       return cryptoABS.paused.call();
@@ -460,7 +513,7 @@ contract("CryptoABS", function(accounts) {
   it("7.2. payee should withdraw interest fail when contract paused", function() {
     var cryptoABS;
     var totalInterest;
-    var withdrawAmount = web3.toWei(0.1, "ether");
+    var withdrawAmount = web3.toWei(0.05, "ether");
 
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
@@ -770,6 +823,29 @@ contract("CryptoABS", function(accounts) {
       return cryptoABS.getInterestCount.call();
     }).then(function(count){
       assert.equal(count.toNumber() > 0, true, "interest count wasn't correctly");
+    });
+  });
+
+  /**
+   * 15. owner withdraw contract balance
+   */
+  it("15. owner withdraw contract balance", function() {
+    var cryptoABS;
+    var owner_start_amount;
+    var owner_end_amount;
+    var contract_start_amount;
+    var contract_end_amount;
+    return CryptoABS.deployed().then(function(instance) {
+      cryptoABS = instance;
+      owner_start_amount = web3.eth.getBalance(accounts[1]).toNumber();
+      contract_start_amount = web3.eth.getBalance(cryptoABS.address).toNumber();
+      assert.equal(contract_start_amount > 0, true, "contract start balance wasn't correctly");
+      return cryptoABS.ownerWithdraw({from: accounts[1]});
+    }).then(function() {
+      owner_end_amount = web3.eth.getBalance(accounts[1]).toNumber();
+      contract_end_amount = web3.eth.getBalance(cryptoABS.address).toNumber();
+      assert.equal(contract_end_amount, 0, "contract end balance wasn't correctly");
+      assert.equal(owner_end_amount > owner_start_amount, true, "owner balance wasn't correctly");
     });
   });
 

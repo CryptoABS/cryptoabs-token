@@ -52,7 +52,9 @@ See [COVERAGE.md](./COVERAGE.md) for more details.
     - [x] `transfer`: payee should transfer success when contract non paused
     - [x] `transfer`: payee should transfer fail when contract paused
     - [x] `transfer`: over token limit should fail
-    - [ ] `transferFrom`: payee transfer tokens from one address to another
+    - [x] `approve`: allow another payee to withdraw from origin payee account
+    - [x] `allowance`: returns the amount which another payee is still allowed to withdraw from origin payee
+    - [x] `transferFrom`: payee transfer tokens from one address to another
 - owner pause contract
     - [x] `ownerPauseContract`: should pause contract success
     - [x] `ownerResumeContract`: should resume contract success
@@ -84,4 +86,4 @@ See [COVERAGE.md](./COVERAGE.md) for more details.
     - [x] `getAssetCount`: get asset count
 - [x] `getPayeeCount`: get payee count
 - [x] `getInterestCount`: get interest count
-- [ ] `ownerWithdraw`: owner withdraw contract balance
+- [x] `ownerWithdraw`: owner withdraw contract balance
