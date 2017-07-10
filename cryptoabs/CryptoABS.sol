@@ -494,11 +494,11 @@ contract CryptoABS is StandardToken, Ownable {
     uint256 payeesLength = payeeArray.length;
     while (i < payeesLength && msg.gas > 2000000) {
       address _payee = payeeArray[i];
-      uint256 balance = balances[_payee];
-      if (payees[_payee].isPayable == true && balance > 0) {
-        uint256 _interestInWei = (balance * interestArray[getInterestCount() - 1]) / totalSupply;
+      uint256 _balance = balances[_payee];
+      if (payees[_payee].isPayable == true && _balance > 0) {
+        uint256 _interestInWei = (_balance * interestArray[getInterestCount() - 1]) / totalSupply;
         payees[_payee].interestInWei += _interestInWei;
-        DepositInterest(getInterestCount(), _payee, _interestInWei);
+        DepositInterest(getInterestCount(), _payee, _balance, _interestInWei);
       }
       i++;
     }
@@ -559,7 +559,7 @@ contract CryptoABS is StandardToken, Ownable {
    */
   function ownerSetExchangeRateInWei(uint256 _exchangeRateInWei) onlyOwner {
     require(_exchangeRateInWei > 0);
-    var _exchangeRate = ExchangeRate({blockNumber: getBlockNumber(), exchangeRateInWei: _exchangeRateInWei});
+    var _exchangeRate = ExchangeRate( getBlockNumber(), _exchangeRateInWei);
     exchangeRateArray.push(_exchangeRate);
     nextExchangeRateIndex = exchangeRateArray.length;
   }
@@ -600,7 +600,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _data asset data
    */
   function ownerAddAsset(string _data) onlyOwner {
-    var _asset = Asset({data: _data});
+    var _asset = Asset(_data);
     assetArray.push(_asset);
   }
 
@@ -644,6 +644,6 @@ contract CryptoABS is StandardToken, Ownable {
 
   event PayeeWithdrawCapital(address _payee, uint256 _capital);
   event PayeeWithdrawInterest(address _payee, uint256 _interest, uint256 _remainInterest);
-  event DepositInterest(uint256 _times, address _payee, uint256 _interest);
+  event DepositInterest(uint256 _times, address _payee, uint256 _balance, uint256 _interest);
   event Finalized();
 }

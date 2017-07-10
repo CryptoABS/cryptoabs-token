@@ -291,11 +291,11 @@ contract CryptoABS is StandardToken, Ownable {
     uint256 payeesLength = payeeArray.length;
     while (i < payeesLength && msg.gas > 2000000) {
       address _payee = payeeArray[i];
-      uint256 balance = balances[_payee];
-      if (payees[_payee].isPayable == true && balance > 0) {
-        uint256 _interestInWei = (balance * interestArray[getInterestCount() - 1]) / totalSupply;
+      uint256 _balance = balances[_payee];
+      if (payees[_payee].isPayable == true && _balance > 0) {
+        uint256 _interestInWei = (_balance * interestArray[getInterestCount() - 1]) / totalSupply;
         payees[_payee].interestInWei += _interestInWei;
-        DepositInterest(getInterestCount(), _payee, _interestInWei);
+        DepositInterest(getInterestCount(), _payee, _balance, _interestInWei);
       }
       i++;
     }
@@ -441,6 +441,6 @@ contract CryptoABS is StandardToken, Ownable {
 
   event PayeeWithdrawCapital(address _payee, uint256 _capital);
   event PayeeWithdrawInterest(address _payee, uint256 _interest, uint256 _remainInterest);
-  event DepositInterest(uint256 _times, address _payee, uint256 _interest);
+  event DepositInterest(uint256 _times, address _payee, uint256 _balance, uint256 _interest);
   event Finalized();
 }
