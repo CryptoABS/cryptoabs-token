@@ -315,7 +315,7 @@ contract CryptoABS is StandardToken, Ownable {
    * @dev withdraw interest by payee
    * @param _interestInWei Withdraw interest amount in wei
    */
-  function payeeWithdrawInterest(uint256 _interestInWei) payable isPayee notPaused isInitialized notLockout {
+  function payeeWithdrawInterest(uint256 _interestInWei) payable isPayee isInitialized notLockout {
     require(msg.value == 0);
     uint256 interestInWei = _interestInWei;
     require(payees[msg.sender].isPayable == true && _interestInWei <= payees[msg.sender].interestInWei);
