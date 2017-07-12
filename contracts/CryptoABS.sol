@@ -26,9 +26,9 @@ contract CryptoABS is StandardToken, Ownable {
   uint256 public finalizedBlock;                        // 合約終止投資的區塊編號
   uint256 public finalizedTime;                         // 合約終止投資的時間
   uint256 public finalizedCapital;                      // 合約到期的 ETH 金額
-  uint256 public interestRate;                          // 利率，公開資訊提供查詢，initialized 後不再更動
-  uint256 public interestTimes;                         // 派息次數，公開資訊提供查詢，initialized 後不再更動
-  uint256 public interestPeriod;                        // 派息間距，公開資訊提供查詢，initialized 後不再更動
+  //uint256 public interestRate;                          // 利率，公開資訊提供查詢，initialized 後不再更動
+  //uint256 public interestTerms;                         // 派息次數，公開資訊提供查詢，initialized 後不再更動
+  //uint256 public interestPeriod;                        // 派息間距，公開資訊提供查詢，initialized 後不再更動
 
   struct ExchangeRate {
     uint256 blockNumber;                                // block number
@@ -135,8 +135,6 @@ contract CryptoABS is StandardToken, Ownable {
    * @param _tokenMaturityPeriod contract token maturity period
    * @param _minInvestInWei minimum wei accept of invest
    * @param _maxTokenSupply maximum toke supply
-   * @param _interestRate interest rate
-   * @param _interestPeriod interest period
    * @param _tokenExchangeRateInWei token exchange rate in wei
    * @param _exchangeRateInWei eth exchange rate in wei
    */
@@ -153,8 +151,9 @@ contract CryptoABS is StandardToken, Ownable {
       uint256 _tokenMaturityPeriod,
       uint256 _minInvestInWei,
       uint256 _maxTokenSupply,
-      uint256 _interestRate,
-      uint256 _interestPeriod,
+      //uint256 _interestRate,
+      //uint256 _interestTerms,
+      //uint256 _interestPeriod,
       uint256 _tokenExchangeRateInWei,
       uint256 _exchangeRateInWei) onlyOwner {
     require(bytes(name).length == 0);
@@ -170,8 +169,7 @@ contract CryptoABS is StandardToken, Ownable {
     require(tokenMaturityPeriod == 0);
     require(initializedTime == 0);
     require(_maxTokenSupply >= totalSupply);
-    require(interestRate == 0);
-    require(interestPeriod == 0);
+    //require(interestRate == 0 && interestTerms == 0 && interestPeriod == 0);
     name = _name;
     symbol = _symbol;
     decimals = _decimals;
@@ -184,8 +182,9 @@ contract CryptoABS is StandardToken, Ownable {
     tokenMaturityPeriod = _tokenMaturityPeriod;
     minInvestInWei = _minInvestInWei;
     maxTokenSupply = _maxTokenSupply;
-    interestRate = _interestRate;
-    interestPeriod = _interestPeriod;
+    //interestRate = _interestRate;
+    //interestTerms = _interestTerms;
+    //interestPeriod = _interestPeriod;
     tokenExchangeRateInWei = _tokenExchangeRateInWei;
     ownerSetExchangeRateInWei(_exchangeRateInWei);
     initialized = true;
@@ -418,10 +417,10 @@ contract CryptoABS is StandardToken, Ownable {
 
   /**
    * @dev put interest in this contract
-   * @param _times Number of interest
+   * @param _terms Number of interest
    */
-  function ownerPutInterest(uint256 _times) payable isInitialized isPaused onlyOwner {
-    require(_times == (getInterestCount() + 1));
+  function ownerPutInterest(uint256 _terms) payable isInitialized isPaused onlyOwner {
+    require(_terms == (getInterestCount() + 1));
     interestArray.push(msg.value);
   }
 
@@ -441,6 +440,6 @@ contract CryptoABS is StandardToken, Ownable {
 
   event PayeeWithdrawCapital(address _payee, uint256 _capital);
   event PayeeWithdrawInterest(address _payee, uint256 _interest, uint256 _remainInterest);
-  event DepositInterest(uint256 _times, address _payee, uint256 _balance, uint256 _interest);
+  event DepositInterest(uint256 _terms, address _payee, uint256 _balance, uint256 _interest);
   event Finalized();
 }

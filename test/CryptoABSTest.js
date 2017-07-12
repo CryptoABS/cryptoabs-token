@@ -61,8 +61,8 @@ contract("CryptoABS", function(accounts) {
     var initializedTime = 0;                      
     var minEthInvest = 1000000000000000000;    // 購買 Token 最小單位
     var maxTokenSupply = 10000;
-    var interestRate = 8;
-    var interestPeriod = 86400 * 30;
+    //var interestRate = 8;
+    //var interestPeriod = 86400 * 30;
     var ethExchangeRate = 1000000000000000000 / 280;
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
@@ -79,8 +79,8 @@ contract("CryptoABS", function(accounts) {
         tokenMaturityPeriod,
         minEthInvest,
         maxTokenSupply,
-        interestRate,
-        interestPeriod,
+        //interestRate,
+        //interestPeriod,
         tokenExchangeRate,
         ethExchangeRate);
     }).catch(function(err) {
@@ -104,8 +104,8 @@ contract("CryptoABS", function(accounts) {
     var initializedTime = unixTime;               
     var minEthInvest = 1000000000000000000;       // 購買 Token 最小單位
     var maxTokenSupply = 10000;
-    var interestRate = 8;
-    var interestPeriod = 15;
+    //var interestRate = 8;
+    //var interestPeriod = 15;
     var ethExchangeRate = 1000000000000000000 / 280;
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
@@ -122,8 +122,8 @@ contract("CryptoABS", function(accounts) {
         tokenMaturityPeriod,
         minEthInvest,
         maxTokenSupply,
-        interestRate,
-        interestPeriod,
+        //interestRate,
+        //interestPeriod,
         tokenExchangeRate,
         ethExchangeRate);
     }).then(function() {
