@@ -207,7 +207,18 @@ contract CryptoABS is StandardToken, Ownable {
    * @dev fallback function accept ether
    */
   function () payable notPaused {
-    proxyPayment(msg.sender);
+    if (getBlockNumber() >= startBlock &&
+      getBlockNumber() <= endBlock &&
+      finalizedBlock == 0) {
+      proxyPayment(msg.sender);
+    } else if (now > (initializedTime + financingPeriod + tokenLockoutPeriod) && 
+      payees[msg.sender].isPayable == true && payees[msg.sender].interestInWei > 0) {
+      payeeWithdrawInterest();
+    } else if (now > (initializedTime + financingPeriod + tokenMaturityPeriod)) {
+      payeeWithdrawCapital();
+    } else {
+      throw;
+    }
   }
 
   /**
@@ -321,6 +332,18 @@ contract CryptoABS is StandardToken, Ownable {
     require(msg.sender.send(interestInWei));
     payees[msg.sender].interestInWei -= interestInWei;
     PayeeWithdrawInterest(msg.sender, interestInWei, payees[msg.sender].interestInWei);
+  }
+
+  /**
+   * @dev withdraw interest by payee
+   */
+  function payeeWithdrawInterest() payable isPayee isInitialized notLockout {
+    require(msg.value == 0);
+    require(payees[msg.sender].isPayable == true && payees[msg.sender].interestInWei > 0);
+    uint256 _interestInWei = payees[msg.sender].interestInWei;
+    require(msg.sender.send(payees[msg.sender].interestInWei));
+    payees[msg.sender].interestInWei = 0;
+    PayeeWithdrawInterest(msg.sender, _interestInWei, payees[msg.sender].interestInWei);
   }
 
   /**
