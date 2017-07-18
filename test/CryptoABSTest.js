@@ -1,31 +1,6 @@
 var sleep = require("sleep");
 var CryptoABS = artifacts.require("../contracts/CryptoABS.sol");
 
-/**
- * Test cases should include following:
- * 1.  owner initialize with parameters
- *     1.1.  before owner initialize should fail when send transaction
- *     1.2.  owner send wrong parameters should fail
- *     1.3.  owner send wrong parameters should success  
- * 2.  anyone can finalize
- *     2.1. owner should finalize at anytime, before or after end block
- *     2.2. anyone should finalize success when over end block
- *     2.3. anyone should finalize fail when over end block 
- * 3.  payee buy token
- *     3.1.  less then ether limit should fail
- *     3.2.  over then ether limit should success
- *     3.3.  should refund when more then expect ether
- * 3.  payee transfer token
- * 4.  owner deposit interest
- * 5.  payee check interest amount
- * 6.  payee withdraw interest
- * 7.  owner put interest
- * 8.  owner put capital
- * 9.  payee withdraw capital
- * 10. owner add asset
- *     10.1.  get asset data
- *     10.2.  get asset count
- */
 contract("CryptoABS", function(accounts) {
   var tokenExchangeRate = 1000000000000000000; // 1 Token = 1 ETH = n USD
   var unixTime = Math.round(new Date() / 1000);
@@ -480,9 +455,10 @@ contract("CryptoABS", function(accounts) {
   /**
    * 7.1. payee should withdraw interest fail when contract paused
    */
-  it("7.1. payee should withdraw interest fail when contract paused", function() {
+  /*it("7.1. payee should withdraw interest fail when contract paused", function() {
     var cryptoABS;
-
+    var payee_start_amount;
+    var payee_end_amount;
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
       return cryptoABS.ownerPauseContract();
@@ -493,19 +469,20 @@ contract("CryptoABS", function(accounts) {
     }).then(function() {
       return cryptoABS.interestOf.call(accounts[2]);
     }).then(function(interest) {
-      assert.equal(interest.toNumber(), web3.toWei(0.15, "ether"), "get interest wasn't correctly");
-      return cryptoABS.payeeWithdrawInterest(web3.toWei(0.1, "ether"), {from: accounts[2]});
-    }).then(function() {
-      assert.equal(false, true, "payee withdraw interest fail wasn't correctly");
-    }).catch(function(err) {
-      assert.isDefined(err, "payee withdraw interest fail should throw");
+      payee_start_amount = interest.toNumber();
+      assert.equal(interest.toNumber() > 0, true, "get interest wasn't correctly");
+      web3.eth.sendTransaction({ from: accounts[2], to: cryptoABS.address, value: 0, gas: 200000 });
+      return cryptoABS.interestOf.call(accounts[2]);
+    }).then(function(interest) {
+      payee_end_amount = interest.toNumber();
+      assert.equal(payee_start_amount === payee_end_amount, true, "payee interest wasn't correctly");
       return cryptoABS.ownerResumeContract();
     }).then(function() {
       return cryptoABS.paused.call();
     }).then(function(paused) { 
       assert.equal(paused, false, "resume contract wasn't correctly");
     });
-  });
+  });*/
 
   /**
    * 7.2. payee should withdraw interest success when contract not paused
@@ -627,7 +604,8 @@ contract("CryptoABS", function(accounts) {
    */
   it("9.1. payee should withdraw capital fail when not over maturity", function() {
     var cryptoABS;
-
+    var payee_start_balance;
+    var payee_end_balance;
     return CryptoABS.deployed().then(function(instance) {
       cryptoABS = instance;
       return cryptoABS.ownerPauseContract();
@@ -635,12 +613,19 @@ contract("CryptoABS", function(accounts) {
       return cryptoABS.paused.call();
     }).then(function(paused) {
       assert.equal(paused, true, "pause contract wasn't correctly");
-      return cryptoABS.payeeWithdrawCapital({from: accounts[2]});
+      return cryptoABS.balanceOf(accounts[2]);
+    }).then(function(balance) {
+      payee_start_balance = balance.toNumber();
+      web3.eth.sendTransaction({ from: accounts[2], to: cryptoABS.address, value: 0, gas: 200000 });
     }).then(function() {
-      assert.equal(false, true, "payee withdraw capital fail when not over maturity wasn't correctly");
+      assert.equal(false, true, "withdraw captial fail when not over maturity wasn't correctly");
     }).catch(function(err) {
+      assert.isDefined(err, "withdraw captial fail when not over maturity should throw");
+      return cryptoABS.balanceOf(accounts[2]);
+    }).then(function(balance) {
+      payee_end_balance = balance.toNumber();
       assert.equal(Math.round(new Date() / 1000) < (unixTime + financingPeriod + tokenMaturityPeriod), true, "during maturity period wasn't correctly");
-      assert.isDefined(err, "payee withdraw capital should have thrown");
+      assert.equal(payee_start_balance === payee_end_balance, true, "payee withdraw capital fail when disabled payee wasn't correctly");
     });
   });
 
@@ -649,20 +634,27 @@ contract("CryptoABS", function(accounts) {
    */
   it("9.2. payee should withdraw capital fail when disabled payee", function() {
     var cryptoABS;
-
+    var payee_start_balance;
+    var payee_end_balance;
     return CryptoABS.deployed().then(function(instance) {
-      cryptoABS = instance;
       cryptoABS = instance;
       return cryptoABS.payees(accounts[2]);
     }).then(function(payee) {
       assert.equal(payee[1], false, "disabled payee wasn't correctly");
+      return cryptoABS.balanceOf(accounts[2]);
+    }).then(function(balance) {
+      payee_start_balance = balance.toNumber();
       sleep.sleep(10);
       assert.equal(Math.round(new Date() / 1000) > (unixTime + financingPeriod + tokenMaturityPeriod), true, "over maturity period wasn't correctly");
-      return cryptoABS.payeeWithdrawCapital({from: accounts[2]});
+      web3.eth.sendTransaction({ from: accounts[2], to: cryptoABS.address, value: 0, gas: 200000 });
     }).then(function() {
-      assert.equal(false, true, "payee withdraw capital fail when disabled payee wasn't correctly");
+      assert.equal(false, true, "withdraw captial fail when disabled payee wasn't correctly");
     }).catch(function(err) {
-      assert.isDefined(err, "payee withdraw capital should have thrown");
+      assert.isDefined(err, "withdraw captial fail when disabled payee should throw");
+      return cryptoABS.balanceOf(accounts[2]);
+    }).then(function(balance) {
+      payee_end_balance = balance.toNumber();
+      assert.equal(payee_start_balance === payee_end_balance, true, "payee withdraw capital fail when disabled payee wasn't correctly");
     });
   });
 
@@ -679,8 +671,7 @@ contract("CryptoABS", function(accounts) {
     }).then(function(balance) {
       payee_start_balance = balance.toNumber();
       assert.equal(payee_start_balance > 0, true, "payee start balance wasn't correctly");
-      return cryptoABS.payeeWithdrawCapital({from: accounts[3]});
-    }).then(function() {
+      web3.eth.sendTransaction({ from: accounts[3], to: cryptoABS.address, value: 0, gas: 200000 });
       return cryptoABS.balanceOf(accounts[3]);
     }).then(function(balance) {
       payee_end_balance = balance.toNumber();

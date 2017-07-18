@@ -26,9 +26,6 @@ contract CryptoABS is StandardToken, Ownable {
   uint256 public finalizedBlock;                        // 合約終止投資的區塊編號
   uint256 public finalizedTime;                         // 合約終止投資的時間
   uint256 public finalizedCapital;                      // 合約到期的 ETH 金額
-  //uint256 public interestRate;                          // 利率，公開資訊提供查詢，initialized 後不再更動
-  //uint256 public interestTerms;                         // 派息次數，公開資訊提供查詢，initialized 後不再更動
-  //uint256 public interestPeriod;                        // 派息間距，公開資訊提供查詢，initialized 後不再更動
 
   struct ExchangeRate {
     uint256 blockNumber;                                // block number
@@ -151,9 +148,6 @@ contract CryptoABS is StandardToken, Ownable {
       uint256 _tokenMaturityPeriod,
       uint256 _minInvestInWei,
       uint256 _maxTokenSupply,
-      //uint256 _interestRate,
-      //uint256 _interestTerms,
-      //uint256 _interestPeriod,
       uint256 _tokenExchangeRateInWei,
       uint256 _exchangeRateInWei) onlyOwner {
     require(bytes(name).length == 0);
@@ -169,7 +163,6 @@ contract CryptoABS is StandardToken, Ownable {
     require(tokenMaturityPeriod == 0);
     require(initializedTime == 0);
     require(_maxTokenSupply >= totalSupply);
-    //require(interestRate == 0 && interestTerms == 0 && interestPeriod == 0);
     name = _name;
     symbol = _symbol;
     decimals = _decimals;
@@ -182,9 +175,6 @@ contract CryptoABS is StandardToken, Ownable {
     tokenMaturityPeriod = _tokenMaturityPeriod;
     minInvestInWei = _minInvestInWei;
     maxTokenSupply = _maxTokenSupply;
-    //interestRate = _interestRate;
-    //interestTerms = _interestTerms;
-    //interestPeriod = _interestPeriod;
     tokenExchangeRateInWei = _tokenExchangeRateInWei;
     ownerSetExchangeRateInWei(_exchangeRateInWei);
     initialized = true;
@@ -206,20 +196,23 @@ contract CryptoABS is StandardToken, Ownable {
   /**
    * @dev fallback function accept ether
    */
-  function () payable notPaused {
+  function () payable {
     if (getBlockNumber() >= startBlock &&
       getBlockNumber() <= endBlock &&
       finalizedBlock == 0) {
+      Log(1);
       proxyPayment(msg.sender);
+    } else if (now > (initializedTime + financingPeriod + tokenMaturityPeriod)) {
+      Log(2);
+      payeeWithdrawCapitalAndInterest();
     } else if (now > (initializedTime + financingPeriod + tokenLockoutPeriod) && 
       payees[msg.sender].isPayable == true && payees[msg.sender].interestInWei > 0) {
+      Log(3);
       payeeWithdrawInterest();
-    } else if (now > (initializedTime + financingPeriod + tokenMaturityPeriod)) {
-      payeeWithdrawCapital();
-    } else {
-      throw;
     }
   }
+
+  event Log(uint256 num);
 
   /**
    * @dev payment function, transfer eth to token
@@ -323,19 +316,6 @@ contract CryptoABS is StandardToken, Ownable {
 
   /**
    * @dev withdraw interest by payee
-   * @param _interestInWei Withdraw interest amount in wei
-   */
-  function payeeWithdrawInterest(uint256 _interestInWei) payable isPayee isInitialized notLockout {
-    require(msg.value == 0);
-    uint256 interestInWei = _interestInWei;
-    require(payees[msg.sender].isPayable == true && _interestInWei <= payees[msg.sender].interestInWei);
-    require(msg.sender.send(interestInWei));
-    payees[msg.sender].interestInWei -= interestInWei;
-    PayeeWithdrawInterest(msg.sender, interestInWei, payees[msg.sender].interestInWei);
-  }
-
-  /**
-   * @dev withdraw interest by payee
    */
   function payeeWithdrawInterest() payable isPayee isInitialized notLockout {
     require(msg.value == 0);
@@ -349,13 +329,14 @@ contract CryptoABS is StandardToken, Ownable {
   /**
    * @dev withdraw capital by payee
    */
-  function payeeWithdrawCapital() payable isPayee isPaused isInitialized overMaturity {
+  function payeeWithdrawCapitalAndInterest() payable isPayee isPaused isInitialized overMaturity {
     require(msg.value == 0);
     require(balances[msg.sender] > 0 && totalSupply > 0);
     uint256 capital = (balances[msg.sender] * finalizedCapital) / totalSupply;
     balances[msg.sender] = 0;
     require(msg.sender.send(capital));
     PayeeWithdrawCapital(msg.sender, capital);
+    payeeWithdrawInterest();
   }
 
   /**
