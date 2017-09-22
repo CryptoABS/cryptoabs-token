@@ -250,12 +250,6 @@ contract CryptoABS is StandardToken, Ownable {
   address[] public payeeArray;                          // payee array
   uint256 public nextPayeeIndex;                        // payee deposite interest index
 
-  struct Asset {
-    string data;                                        // asset data
-  }
-
-  Asset[] public assetArray;                            // asset array
-
   /**
    * @dev Throws if contract paused.
    */
@@ -582,22 +576,6 @@ contract CryptoABS is StandardToken, Ownable {
    */
   function getBlockNumber() internal constant returns (uint256) {
     return block.number;
-  }
-
-  /**
-   * @dev add asset data, audit information
-   * @param _data asset data
-   */
-  function ownerAddAsset(string _data) onlyOwner {
-    var _asset = Asset(_data);
-    assetArray.push(_asset);
-  }
-
-  /**
-   * @dev get asset count
-   */
-  function getAssetCount() constant returns (uint256 result) {
-    return assetArray.length;
   }
 
   /**
