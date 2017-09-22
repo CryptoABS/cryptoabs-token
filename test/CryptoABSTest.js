@@ -762,41 +762,9 @@ contract("CryptoABS", function(accounts) {
   });
 
   /**
-   * 12.1. owner add asset
+   * 12. get payee count
    */
-  it("12.1. owner add asset", function() {
-    var cryptoABS;
-    var data = "test";
-    var num = 0;
-
-    return CryptoABS.deployed().then(function(instance) {
-      cryptoABS = instance;
-      return cryptoABS.ownerAddAsset(data, {from: accounts[1]});
-    }).then(function() {
-      return cryptoABS.assetArray.call(num);
-    }).then(function(result) {
-      assert.equal(result, data, "get asset data wasn't correctly");
-    });
-  });
-
-  /**
-   * 12.2. get asset count
-   */
-  it("12.2. get asset count", function() {
-    var cryptoABS;
-
-    return CryptoABS.deployed().then(function(instance) {
-      cryptoABS = instance;
-      return cryptoABS.getAssetCount.call();
-    }).then(function(count){
-      assert.equal(count.toNumber(), 1, "add asset wasn't correctly");
-    });
-  });
-
-  /**
-   * 13. get payee count
-   */
-  it("13. get payee count", function() {
+  it("12. get payee count", function() {
     var cryptoABS;
 
     return CryptoABS.deployed().then(function(instance) {
@@ -808,9 +776,9 @@ contract("CryptoABS", function(accounts) {
   });
 
   /**
-   * 14. get interest count
+   * 13. get interest count
    */
-  it("14. get interest count", function() {
+  it("13. get interest count", function() {
     var cryptoABS;
 
     return CryptoABS.deployed().then(function(instance) {
@@ -822,9 +790,9 @@ contract("CryptoABS", function(accounts) {
   });
 
   /**
-   * 15. owner withdraw contract balance
+   * 14. owner withdraw contract balance
    */
-  it("15. owner withdraw contract balance", function() {
+  it("14. owner withdraw contract balance", function() {
     var cryptoABS;
     var owner_start_amount;
     var owner_end_amount;

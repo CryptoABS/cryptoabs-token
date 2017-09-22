@@ -46,9 +46,6 @@
     - [x] `ownerDisablePayee`: owner should disabled payee success
     - [x] `ownerEnablePayee`: owner should enabled payee success
     - [x] `ownerDisablePayee`: should fail when disabled payee is not owner
-- asset
-    - [x] `ownerAddAsset`: owner add asset
-    - [x] `getAssetCount`: get asset count
 - [x] `getPayeeCount`: get payee count
 - [x] `getInterestCount`: get interest count
 - [x] `ownerWithdraw`: owner withdraw contract balance
